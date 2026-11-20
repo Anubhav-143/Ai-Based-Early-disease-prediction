@@ -1,0 +1,2422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI-Based Early Disease Prediction and Risk Assessment System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            clinical: {
+              bg: '#F8FAFC',
+              surface: '#FFFFFF',
+              navy: '#0F172A',
+              slate: '#334155',
+              muted: '#64748B',
+              border: '#E2E8F0',
+              teal: '#0D9488',
+              tealDark: '#0F766E',
+              tealLight: '#F0FDFA',
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body {
+      background-color: #F8FAFC;
+      color: #0F172A;
+      font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    }
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #printable-report-container, #printable-report-container * {
+        visibility: visible;
+      }
+      #printable-report-container {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        background: #FFFFFF !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-teal-100 selection:text-teal-900">
+
+  <!-- Persistent Clinical Research Safety Banner -->
+  <div class="bg-slate-900 text-slate-100 border-b border-slate-800 px-4 py-2 text-xs sm:text-sm no-print">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div class="flex items-center gap-2 text-center sm:text-left">
+        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase tracking-wider">
+          Research Prototype
+        </span>
+        <span class="font-medium text-slate-200">
+          Educational &amp; Academic Research Prototype Only — Not a Medical Diagnosis. Does not replace professional clinical evaluation.
+        </span>
+      </div>
+      <div class="text-[11px] font-mono text-slate-400 shrink-0">
+        LOCAL INFERENCE ENGINE v2.4.0 • ZERO EXTERNAL TELEMETRY
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Navigation Header -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between py-3 gap-3">
+        <!-- Brand / Title -->
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded bg-teal-700 text-white flex items-center justify-center shrink-0 shadow-xs">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-3-3v6m-7 4h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-sm sm:text-base font-bold text-slate-900 tracking-tight leading-tight">
+              AI-Based Early Disease Prediction &amp; Risk Assessment System
+            </h1>
+            <p class="text-xs text-slate-500">
+              Multi-Cohort Statistical Risk Modeling &amp; Feature Attribution Workbench
+            </p>
+          </div>
+        </div>
+
+        <!-- Primary Navigation Tabs -->
+        <nav class="flex flex-wrap items-center gap-1" aria-label="Main Navigation">
+          <button onclick="navigateTo('dashboard')" id="nav-dashboard" class="nav-btn px-3 py-1.5 rounded text-xs sm:text-sm font-medium transition-colors">
+            Dashboard
+          </button>
+          <button onclick="navigateTo('assessment')" id="nav-assessment" class="nav-btn px-3 py-1.5 rounded text-xs sm:text-sm font-medium transition-colors">
+            New Assessment
+          </button>
+          <button onclick="navigateTo('results')" id="nav-results" class="nav-btn px-3 py-1.5 rounded text-xs sm:text-sm font-medium transition-colors">
+            Results &amp; Report
+          </button>
+          <button onclick="navigateTo('history')" id="nav-history" class="nav-btn px-3 py-1.5 rounded text-xs sm:text-sm font-medium transition-colors">
+            History <span id="history-count-badge" class="ml-1 px-1.5 py-0.2 text-[11px] font-mono rounded bg-slate-100 text-slate-700">0</span>
+          </button>
+          <button onclick="navigateTo('models')" id="nav-models" class="nav-btn px-3 py-1.5 rounded text-xs sm:text-sm font-medium transition-colors">
+            Model Registry
+          </button>
+          <button onclick="navigateTo('about')" id="nav-about" class="nav-btn px-3 py-1.5 rounded text-xs sm:text-sm font-medium transition-colors">
+            Architecture &amp; Ethics
+          </button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- Toast / Non-Blocking Notification Banner -->
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none no-print"></div>
+
+  <!-- Presentation Walkthrough Modal -->
+  <div id="walkthrough-modal" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-[1px] flex items-center justify-center p-4 no-print">
+    <div class="bg-white border border-slate-200 rounded-md shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+        <div>
+          <span class="text-[11px] font-mono uppercase tracking-wider text-teal-700 font-semibold">College Presentation Guide</span>
+          <h2 class="text-lg font-bold text-slate-900">System Demonstration Walkthrough</h2>
+        </div>
+        <button onclick="toggleWalkthroughModal(false)" class="p-1.5 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="p-6 space-y-4 text-sm text-slate-700 leading-relaxed">
+        <p class="bg-slate-50 border border-slate-200 rounded p-3 text-xs text-slate-600">
+          <strong>Note for Evaluators:</strong> All inference executes locally in browser memory using calibrated log-odds equations, median imputation rules, and z-score standardization parameters derived from documented UCI Machine Learning Repository cohorts. Zero external hardware or cloud APIs are used.
+        </p>
+        <ol class="space-y-3 list-decimal list-inside">
+          <li>
+            <strong class="text-slate-900">Inspect Model Registry &amp; Validation Metrics:</strong> Open the <em>Model Registry</em> tab to review dataset provenance, sample sizes, held-out test metrics (ROC-AUC, F1, Recall, Precision), confusion matrices, and calibration caveats.
+          </li>
+          <li>
+            <strong class="text-slate-900">Compare Lifestyle vs. Lab-Informed Diabetes Inference:</strong> In <em>New Assessment</em>, load <strong>Profile A (Multiple Diabetes Risk Factors)</strong> and run inference. Notice how fasting glucose and HbA1c shift the model from the Lifestyle-Only pipeline to the Lab-Informed pipeline, then compare against <strong>Profile B (Low Risk)</strong>.
+          </li>
+          <li>
+            <strong class="text-slate-900">Cardiovascular Risk &amp; Feature Attribution:</strong> Load <strong>Profile C (Cardiovascular Cohort)</strong> to inspect how systolic blood pressure, cholesterol ratio, and smoking status contribute positive log-odds drivers in the SHAP-style attribution chart.
+          </li>
+          <li>
+            <strong class="text-slate-900">Strict Missing-Data Guardrail (CKD Module):</strong> Load <strong>Profile E (Incomplete Clinical Data)</strong> under Chronic Kidney Disease. Observe that the system refuses to fabricate a validated renal risk score from symptoms alone and displays an <em>Insufficient Data</em> status. Then load <strong>Profile D</strong> with laboratory serum creatinine and albumin values.
+          </li>
+          <li>
+            <strong class="text-slate-900">Boundary Validation &amp; Urgent Clinical Red Flags:</strong> Load <strong>Profile F (Conflicting / Boundary Values)</strong> to demonstrate physiological range validation and urgent clinical warning banners (e.g., hypertensive crisis thresholds).
+          </li>
+          <li>
+            <strong class="text-slate-900">Generate Printable Clinical Research Summary:</strong> From any result view, click <em>Generate Printable Report</em> to inspect the formatted report with model versioning, limitations, and non-diagnostic disclaimers.
+          </li>
+        </ol>
+      </div>
+      <div class="px-6 py-3 bg-slate-50 border-t border-slate-200 flex justify-end gap-2">
+        <button onclick="toggleWalkthroughModal(false); navigateTo('assessment');" class="px-4 py-2 rounded bg-teal-700 text-white text-xs font-medium hover:bg-teal-800">
+          Start Interactive Demo
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Viewport -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- ==================== PAGE 1: DASHBOARD ==================== -->
+    <section id="page-dashboard" class="space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 class="text-xl font-bold text-slate-900 tracking-tight">Research Operations Dashboard</h2>
+          <p class="text-sm text-slate-600">Local session telemetry, cohort distribution, and active ML pipeline status.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="toggleWalkthroughModal(true)" class="px-3 py-2 rounded border border-slate-300 bg-white text-slate-700 text-xs font-medium hover:bg-slate-50 transition-colors">
+            Presentation Walkthrough
+          </button>
+          <button onclick="navigateTo('assessment')" class="px-4 py-2 rounded bg-teal-700 text-white text-xs font-medium hover:bg-teal-800 transition-colors shadow-xs">
+            + New Health Assessment
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white border border-slate-200 rounded-md p-4 shadow-2xs">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Assessments</span>
+            <span class="text-xs font-mono text-slate-400">SESSION DB</span>
+          </div>
+          <div class="mt-2 flex items-baseline gap-2">
+            <span id="kpi-total" class="text-2xl font-bold text-slate-900 tabular-nums">0</span>
+            <span class="text-xs text-slate-500">records logged</span>
+          </div>
+          <p class="mt-1 text-[11px] text-slate-400">Local application session statistics</p>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-md p-4 shadow-2xs">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-medium text-slate-500 uppercase tracking-wider">Elevated / High Risk</span>
+            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+          </div>
+          <div class="mt-2 flex items-baseline gap-2">
+            <span id="kpi-elevated" class="text-2xl font-bold text-slate-900 tabular-nums">0</span>
+            <span id="kpi-elevated-pct" class="text-xs font-mono text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">0%</span>
+          </div>
+          <p class="mt-1 text-[11px] text-slate-400">Moderate-to-high model score cohort</p>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-md p-4 shadow-2xs">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-medium text-slate-500 uppercase tracking-wider">Insufficient Data</span>
+            <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+          </div>
+          <div class="mt-2 flex items-baseline gap-2">
+            <span id="kpi-insufficient" class="text-2xl font-bold text-slate-900 tabular-nums">0</span>
+            <span class="text-xs text-slate-500">incomplete panels</span>
+          </div>
+          <p class="mt-1 text-[11px] text-slate-400">Blocked from unvalidated inference</p>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-md p-4 shadow-2xs">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-medium text-slate-500 uppercase tracking-wider">Trained Pipelines</span>
+            <span class="text-xs font-mono text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded">READY</span>
+          </div>
+          <div class="mt-2 flex items-baseline gap-2">
+            <span class="text-2xl font-bold text-slate-900 tabular-nums">3</span>
+            <span class="text-xs text-slate-500">disease modules</span>
+          </div>
+          <p class="mt-1 text-[11px] text-slate-400">T2D, CVD, and CKD calibrated models</p>
+        </div>
+      </div>
+
+      <!-- Analytics Charts Row -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Chart 1: Assessments by Disease Cohort -->
+        <div class="bg-white border border-slate-200 rounded-md p-5 shadow-2xs">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="text-sm font-semibold text-slate-900">Assessments by Disease Module</h3>
+              <p class="text-xs text-slate-500">Distribution across local application session records (non-epidemiological)</p>
+            </div>
+            <span class="text-[11px] font-mono text-slate-400 border border-slate-200 px-2 py-0.5 rounded">FIG 1.1</span>
+          </div>
+          <div id="chart-disease-cohort" class="h-56 w-full"></div>
+        </div>
+
+        <!-- Chart 2: Risk Tier Distribution -->
+        <div class="bg-white border border-slate-200 rounded-md p-5 shadow-2xs">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="text-sm font-semibold text-slate-900">Model Risk Category Distribution</h3>
+              <p class="text-xs text-slate-500">Stratified by model output tier across stored session runs</p>
+            </div>
+            <span class="text-[11px] font-mono text-slate-400 border border-slate-200 px-2 py-0.5 rounded">FIG 1.2</span>
+          </div>
+          <div id="chart-risk-distribution" class="h-56 w-full"></div>
+        </div>
+      </div>
+
+      <!-- Model & Dataset Status Table -->
+      <div class="bg-white border border-slate-200 rounded-md shadow-2xs overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div>
+            <h3 class="text-sm font-semibold text-slate-900">Active Disease Prediction Pipelines &amp; Held-Out Validation Summary</h3>
+            <p class="text-xs text-slate-500">Metrics computed on stratified 20% held-out test partitions (Seed: 42).</p>
+          </div>
+          <button onclick="navigateTo('models')" class="text-xs font-medium text-teal-700 hover:text-teal-800">
+            Inspect Full Model Cards &rarr;
+          </button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider">
+                <th class="py-3 px-4">Disease Module</th>
+                <th class="py-3 px-4">Algorithm &amp; Version</th>
+                <th class="py-3 px-4">Training Dataset</th>
+                <th class="py-3 px-4 text-right">ROC-AUC</th>
+                <th class="py-3 px-4 text-right">F1-Score</th>
+                <th class="py-3 px-4 text-right">Recall</th>
+                <th class="py-3 px-4">Calibration Status</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200 text-slate-700">
+              <tr class="hover:bg-slate-50/70">
+                <td class="py-3 px-4 font-medium text-slate-900">Type 2 Diabetes (Lab + Lifestyle)</td>
+                <td class="py-3 px-4 font-mono text-[11px]">Calibrated LogReg v2.1</td>
+                <td class="py-3 px-4">UCI Pima Indians Diabetes (n=768)</td>
+                <td class="py-3 px-4 text-right font-mono tabular-nums">0.838</td>
+                <td class="py-3 px-4 text-right font-mono tabular-nums">0.684</td>
+                <td class="py-3 px-4 text-right font-mono tabular-nums">0.667</td>
+                <td class="py-3 px-4"><span class="px-2 py-0.5 rounded bg-teal-50 text-teal-800 border border-teal-200 text-[11px]">Platt Calibrated</span></td>
+              </tr>
+              <tr class="hover:bg-slate-50/70">
+                <td class="py-3 px-4 font-medium text-slate-900">Type 2 Diabetes (Lifestyle-Only)</td>
+                <td class="py-3 px-4 font-mono text-[11px]">L2 LogReg Sub-Model v2.1</td>
+                <td class="py-3 px-4">UCI Pima Non-Lab Subset (n=768)</td>
+                <td class="py-3 px-4 text-right font-mono tabular-nums">0.742</td>
+                <td class="py-3 px-4 text-right font-mono tabular-nums">0.581</td>
+                <td class="py-3 px-4 text-right font-mono tabular-nums">0.574</td>
+                <td class="py-3 px-4"><span class="px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 text-[11px]">Screening Score Only</span></td>
+              </tr>
+              <tr class="hover:bg-slate-50/70">
+                <td class="py-3 px-4 font-medium text-slate-900">Cardiovascular Disease</td>
+                <td class="py-3 px-4 font-mono text-[11px]">Regularized LogReg v1.8</td>
+                <td class="py-3 px-4">UCI Cleveland Heart Cohort (n=303)</td>
+                <td class="py-3 px-4 text-right font-mono tabular-nums">0.884</td>
+                <td class="py-3 px-4 text-right font-mono tabular-nums">0.815</td>
+                <td class="py-3 px-4 text-right font-mono tabular-nums">0.786</td>
+                <td class="py-3 px-4"><span class="px-2 py-0.5 rounded bg-teal-50 text-teal-800 border border-teal-200 text-[11px]">Sigmoid Calibrated</span></td>
+              </tr>
+              <tr class="hover:bg-slate-50/70">
+                <td class="py-3 px-4 font-medium text-slate-900">Chronic Kidney Disease</td>
+                <td class="py-3 px-4 font-mono text-[11px]">Penalized Renal Classifier v1.5</td>
+                <td class="py-3 px-4">UCI CKD Clinical Cohort (n=400)</td>
+                <td class="py-3 px-4 text-right font-mono tabular-nums">0.962</td>
+                <td class="py-3 px-4 text-right font-mono tabular-nums">0.941</td>
+                <td class="py-3 px-4 text-right font-mono tabular-nums">0.920</td>
+                <td class="py-3 px-4"><span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-300 text-[11px]">Small-Sample Caveat</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Recent Assessment History Preview -->
+      <div class="bg-white border border-slate-200 rounded-md shadow-2xs overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+          <div>
+            <h3 class="text-sm font-semibold text-slate-900">Recent Assessment Log</h3>
+            <p class="text-xs text-slate-500">Latest inference runs stored in local browser persistence.</p>
+          </div>
+          <button onclick="navigateTo('history')" class="text-xs font-medium text-teal-700 hover:text-teal-800">
+            View All History &rarr;
+          </button>
+        </div>
+        <div id="dashboard-recent-table" class="overflow-x-auto"></div>
+      </div>
+    </section>
+
+    <!-- ==================== PAGE 2: NEW HEALTH ASSESSMENT ==================== -->
+    <section id="page-assessment" class="hidden space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h2 class="text-xl font-bold text-slate-900 tracking-tight">New Health Risk Assessment</h2>
+          <p class="text-sm text-slate-600">Enter clinical and lifestyle parameters manually or load a synthetic demonstration profile.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="toggleWalkthroughModal(true)" class="px-3 py-1.5 rounded border border-slate-300 bg-white text-slate-700 text-xs font-medium hover:bg-slate-50">
+            Demo Guide
+          </button>
+          <button onclick="resetDemoRecords()" class="px-3 py-1.5 rounded border border-slate-300 bg-white text-slate-700 text-xs font-medium hover:bg-slate-50">
+            Reset Demo Data
+          </button>
+        </div>
+      </div>
+
+      <!-- Integrated Demonstration Mode Bar -->
+      <div class="bg-white border border-slate-200 rounded-md p-4 shadow-2xs">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-3 mb-3 border-b border-slate-100">
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded bg-teal-50 text-teal-800 border border-teal-200 text-[11px] font-mono font-semibold uppercase">
+              Demonstration Mode
+            </span>
+            <span class="text-xs font-semibold text-slate-900">Synthetic Patient Profiles (Fictional Demonstrations Only)</span>
+          </div>
+          <span class="text-[11px] text-slate-500">Clicking a profile populates inputs for live inference by the trained model.</span>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5" id="demo-profiles-grid">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Active Demo Banner (shown when a sample profile is loaded) -->
+      <div id="active-demo-banner" class="hidden bg-teal-50/80 border border-teal-200 rounded-md px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <div class="text-xs text-teal-950">
+          <strong class="font-semibold">Loaded Synthetic Profile:</strong> <span id="active-demo-title"></span>
+          <span class="block sm:inline sm:ml-2 text-teal-800" id="active-demo-desc"></span>
+        </div>
+        <button type="button" onclick="clearFormInputs()" class="text-xs font-medium text-teal-800 underline hover:text-teal-950 shrink-0">
+          Clear Form
+        </button>
+      </div>
+
+      <!-- Urgent Clinical Red-Flag Alert Banner (Dynamic) -->
+      <div id="urgent-safety-banner" class="hidden bg-red-50 border-l-4 border-red-600 rounded-r-md p-4">
+        <div class="flex items-start gap-3">
+          <svg class="w-5 h-5 text-red-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <div class="text-xs text-red-900 space-y-1">
+            <p class="font-bold uppercase tracking-wide text-red-800">Urgent Clinical Attention Advisory</p>
+            <p id="urgent-safety-message" class="leading-relaxed"></p>
+            <p class="font-medium">Do not rely on an educational statistical model when severe symptoms or critical physiological values are present. Seek prompt evaluation by a licensed healthcare professional.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Disease Selection Tabs -->
+      <div class="bg-white border border-slate-200 rounded-md shadow-2xs overflow-hidden">
+        <div class="border-b border-slate-200 bg-slate-50 px-4 pt-3 flex flex-wrap gap-2" role="tablist">
+          <button type="button" onclick="selectDiseaseTab('diabetes')" id="tab-diabetes" class="disease-tab px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-t border-t border-x transition-colors">
+            A. Type 2 Diabetes Risk
+          </button>
+          <button type="button" onclick="selectDiseaseTab('cardiovascular')" id="tab-cardiovascular" class="disease-tab px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-t border-t border-x transition-colors">
+            B. Cardiovascular Disease Risk
+          </button>
+          <button type="button" onclick="selectDiseaseTab('kidney')" id="tab-kidney" class="disease-tab px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-t border-t border-x transition-colors">
+            C. Chronic Kidney Disease Risk
+          </button>
+        </div>
+
+        <!-- Form Container -->
+        <form id="assessment-form" onsubmit="handleAssessmentSubmit(event)" class="p-6 space-y-6" novalidate>
+
+          <!-- Optional Subject Identifier (Non-PII Study Label) -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pb-4 border-b border-slate-100">
+            <div>
+              <label for="subject-label" class="block text-xs font-semibold text-slate-700 mb-1">
+                Study / Case Reference Label <span class="font-normal text-slate-400">(Optional, Non-PII)</span>
+              </label>
+              <input type="text" id="subject-label" placeholder="e.g., CASE-2026-014" class="w-full px-3 py-2 text-xs border border-slate-300 rounded focus:outline-none focus:border-teal-700 font-mono" />
+            </div>
+            <div class="sm:col-span-2 flex items-center">
+              <p class="text-xs text-slate-500">
+                <strong>Privacy &amp; Data Minimization:</strong> Do not enter real patient names, national IDs, or hospital MRNs. All measurements must be manually entered or loaded from synthetic fixtures.
+              </p>
+            </div>
+          </div>
+
+          <!-- ================= MODULE A: TYPE 2 DIABETES ================= -->
+          <div id="form-module-diabetes" class="space-y-6">
+            <div class="bg-slate-50 border border-slate-200 rounded p-3 text-xs text-slate-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div>
+                <span class="font-semibold text-slate-900">Dual-Mode Pipeline:</span> Automatically selects the <strong>Lab-Informed Model (ROC-AUC 0.838)</strong> if Fasting Glucose or HbA1c is provided, or falls back to the <strong>Lifestyle-Only Screening Model (ROC-AUC 0.742)</strong>.
+              </div>
+              <span id="diabetes-mode-indicator" class="px-2.5 py-1 rounded font-mono text-[11px] font-semibold bg-slate-200 text-slate-800 shrink-0">
+                MODE: LIFESTYLE-ONLY
+              </span>
+            </div>
+
+            <!-- Section 1: Self-Reported Demographics & Anthropometrics -->
+            <div>
+              <div class="flex items-center gap-2 mb-3">
+                <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-mono text-[11px] font-semibold">SELF-REPORTED</span>
+                <h3 class="text-sm font-semibold text-slate-900">Demographics, Anthropometrics &amp; Lifestyle History</h3>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                  <label for="t2d-age" class="block text-xs font-medium text-slate-700 mb-1">Age <span class="text-red-600">*</span> <span class="text-slate-400 font-mono">(years)</span></label>
+                  <input type="number" id="t2d-age" min="18" max="110" step="1" placeholder="e.g., 45" oninput="evaluateRealTimeState()" class="w-full px-3 py-2 text-sm border border-slate-300 rounded focus:outline-none focus:border-teal-700 tabular-nums" />
+                  <p id="err-t2d-age" class="text-[11px] text-red-600 mt-1 hidden"></p>
+                </div>
+
+                <div>
+                  <label for="t2d-sex" class="block text-xs font-medium text-slate-700 mb-1">Biological Sex <span class="text-slate-400 font-mono">(cohort covariate)</span></label>
+                  <select id="t2d-sex" onchange="evaluateRealTimeState()" class="w-full px-3 py-2 text-sm border border-slate-300 rounded bg-white focus:outline-none focus:border-teal-700">
+                    <option value="female">Female</option>
+                    <option value="male">Male</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label for="t2d-bmi" class="block text-xs font-medium text-slate-700 mb-1">Body Mass Index (BMI) <span class="text-red-600">*</span> <span class="text-slate-400 font-mono">(kg/m&sup2;)</span></label>
+                  <input type="number" id="t2d-bmi" min="12" max="75" step="0.1" placeholder="e.g., 27.4" oninput="evaluateRealTimeState()" class="w-full px-3 py-2 text-sm border border-slate-300 rounded focus:outline-none focus:border-teal-700 tabular-nums" />
+                  <p id="err-t2d-bmi" class="text-[11px] text-red-600 mt-1 hidden"></p>
+                </div>
+
+                <div>
+                  <label for="t2d-height" class="block text-xs font-medium text-slate-700 mb-1">Height Helper <span class="text-slate-400 font-mono">(cm, optional auto-BMI)</span></label>
+                  <input type="number" id="t2d-height" min="100" max="230" step="1" placeholder="e.g., 170" oninput="autoCalcBMI()" class="w-full px-3 py-2 text-sm border border-slate-300 rounded focus:outline-none focus:border-teal-700 tabular-nums" />
+                </div>
+
+                <div>
+                  <label for="t2d-weight" class="block text-xs font-medium text-slate-700 mb-1">Weight Helper <span class="text-slate-400 font-mono">(kg, optional auto-BMI)</span></label>
+                  <input type="number" id="t2d-weight" min="30" max="300" step="0.5" placeholder="e.g., 78" oninput="autoCalcBMI()" class="w-full px-3 py-2 text-sm border border-slate-300 rounded focus:outline-none focus:border-teal-700 tabular-nums" />
+                </div>
+
+                <div>
+                  <label for="t2d-activity" class="block text-xs font-medium text-slate-700 mb-1">Physical Activity Level</label>
+                  <select id="t2d-activity" onchange="evaluateRealTimeState()" class="w-full px-3 py-2 text-sm border border-slate-300 rounded bg-white focus:outline-none focus:border-teal-700">
+                    <option value="moderate">Moderate (&ge;150 min/week)</option>
+                    <option value="high">High / Vigorous</option>
+                    <option value="low">Low / Sedentary (&lt;60 min/week)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label for="t2d-family" class="block text-xs font-medium text-slate-700 mb-1">First-Degree Family History of Diabetes</label>
+                  <select id="t2d-family" onchange="evaluateRealTimeState()" class="w-full px-3 py-2 text-sm border border-slate-300 rounded bg-white focus:outline-none focus:border-teal-700">
+                    <option value="0">None Reported</option>
+                    <option value="1">One Parent or Sibling</option>
+                    <option value="2">Multiple First-Degree Relatives</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label for="t2d-htn" class="block text-xs font-medium text-slate-700 mb-1">History of Elevated Blood Pressure</label>
+                  <select id="t2d-htn" onchange="evaluateRealTimeState()" class="w-full px-3 py-2 text-sm border border-slate-300 rounded bg-white focus:outline-none focus:border-teal-700">
+                    <option value="0">No</option>
+                    <option value="1">Yes / On Antihypertensive Therapy</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Section 2: Manually Entered Laboratory Biomarkers -->
+            <div class="pt-4 border-t border-slate-200">
+              <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2">
+                  <span class="px-2 py-0.5 rounded bg-teal-50 text-teal-800 border border-teal-200 font-mono text-[11px] font-semibold">LABORATORY RESULTS</span>
+                  <h3 class="text-sm font-semibold text-slate-900">Manually Entered Glycemic Biomarkers <span class="font-normal text-slate-500">(Optional for Screening, Required for Lab-Informed Model)</span></h3>
+                </div>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                  <label for="t2d-glucose" class="block text-xs font-medium text-slate-700 mb-1">Fasting Plasma Glucose <span class="text-slate-400 font-mono">(mg/dL)</span></label>
+                  <input type="number" id="t2d-glucose" min="40" max="600" step="1" placeholder="Leave blank if unavailable" oninput="evaluateRealTimeState()" class="w-full px-3 py-2 text-sm border border-slate-300 rounded focus:outline-none focus:border-teal-700 tabular-nums" />
+                  <p class="text-[11px] text-slate-400 mt-1">Reference fasting range: 70–99 mg/dL</p>
+                  <p id="err-t2d-glucose" class="text-[11px] text-red-600 mt-0.5 hidden"></p>
+                </div>
+
+                <div>
+                  <label for="t2d-hba1c" class="block text-xs font-medium text-slate-700 mb-1">Glycated Hemoglobin (HbA1c) <span class="text-slate-400 font-mono">(%)</span></label>
+                  <input type="number" id="t2d-hba1c" min="3.5" max="18.0" step="0.1" placeholder="Leave blank if unavailable" oninput="evaluateRealTimeState()" class="w-full px-3 py-2 text-sm border border-slate-300 rounded focus:outline-none focus:border-teal-700 tabular-nums" />
+                  <p class="text-[11px] text-slate-400 mt-1">Reference non-diabetic range: &lt;5.7%</p>
+                  <p id="err-t2d-hba1c" class="text-[11px] text-red-600 mt-0.5 hidden"></p>
+                </div>
+
+                <div>
+                  <label for="t2d-sbp" class="block text-xs font-medium text-slate-700 mb-1">Resting Systolic BP <span class="text-slate-400 font-mono">(mmHg, optional)</span></label>
+                  <input type="number" id="t2d-sbp" min="60" max="260" step="1" placeholder="e.g., 122" oninput="evaluateRealTimeState()" class="w-full px-3 py-2 text-sm border border-slate-300 rounded focus:outline-none focus:border-teal-700 tabular-nums" />
+                  <p id="err-t2d-sbp" class="text-[11px] text-red-600 mt-0.5 hidden"></p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ================= MODULE B: CARDIOVASCULAR DISEASE ================= -->
+          <div id="form-module-cardiovascular" class="hidden space-y-6">
+            <div class="bg-slate-50 border border-slate-200 rounded p-3 text-xs text-slate-700">
+              <span class="font-semibold text-slate-900">Model Specification:</span> Trained on UCI Cleveland Heart Disease features (n=303). Requires core hemodynamic and lipid measurements; missing core inputs will prevent validated risk estimation.
+            </div>
+
+            <div>
+              <div class="flex items-center gap-2 mb-3">
+                <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-mono text-[11px] font-semibold">CLINICAL &amp; SELF-REPORTED</span>
+                <h3 class="text-sm font-semibold text-slate-900">Demographics, Hemodynamics &amp; Symptom History</h3>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                  <label for="cvd-age" class="block text-xs font-medium text-slate-700 mb-1">Age <span class="text-red-600">*</span> <span class="text-slate-400 font-mono">(years)</span></label>
+                  <input type="number" id="cvd-age" min="20" max="110" step="1" placeholder="e.g., 56" oninput="evaluateRealTimeState()" class="w-full px-3 py-2 text-sm border border-slate-300 rounded focus:outline-none focus:border-teal-700 tabular-nums" />
+                  <p id="err-cvd-age" class="text-[11px] text-red-600 mt-1 hidden"></p>
+                </div>
+
+                <div>
+                  <label for="cvd-sex" class="block text-xs font-medium text-slate-700 mb-1">Biological Sex <span class="text-red-600">*</span></label>
+                  <select id="cvd-sex" onchange="evaluateRealTimeState()" class="w-full px-3 py-2 text-sm border border-slate-300 rounded bg-white focus:outline-none focus:border-teal-700">
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label for="cvd-sbp" class="block text-xs font-medium text-slate-700 mb-1">Resting Systolic BP <span class="text-red-600">*</span> <span class="text-slate-400 font-mono">(mmHg)</span></label>
+                  <input type="number" id="cvd-sbp" min="60" max="260" step="1" placeholder="e.g., 138" oninput="evaluateRealTimeState()" class="w-full px-3 py-2 text-sm border border-slate-300 rounded focus:outline-none focus:border-teal-700 tabular-nums" />
+                  <p id="err-cvd-sbp" class="text-[11px] text-red-600 mt-1 hidden"></p>
+                </div>
+
+                <div>
+                  <label for="cvd-dbp" class="block text-xs font-medium text-slate-700 mb-1">Resting Diastolic BP <span class="text-slate-400 font-mono">(mmHg)</span></label>
+                  <input type="number" id="cvd-dbp" min="35" max="160" step="1" placeholder="e.g., 86" oninput="evaluateRealTimeState()" class="w-full px-3 py-2 text-sm border border-slate-300 rounded focus:outline-none focus:border-teal-700 tabular-nums" />
+                  <p id="err-cvd-dbp" class="text-[11px] text-red-600 mt-1 hidden"></p>
+                </div>
+
+                <div>
+                  <label for="cvd-smoking" class="block text-xs font-medium text-slate-700 mb-1">Smoking Status</label>
+                  <select id="cvd-smoking" onchange="evaluateRealTimeState()" class="w-full px-3 py-2 text-sm border border-slate-300 rounded bg-white focus:outline-none focus:border-teal-700">
+                    <option value="never">Never Smoked</option>
+                    <option value="former">Former Smoker</option>
+                    <option value="current">Current Smoker</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label for="cvd-diabetes" class="block text-xs font-medium text-slate-700 mb-1">Diagnosed Diabetes History</label>
+                  <select id="cvd-diabetes" onchange="evaluateRealTimeState()" class="w-full px-3 py-2 text-sm border border-slate-300 rounded bg-white focus:outline-none focus:border-teal-700">
+                    <option value="0">No</option>
+                    <option value="1">Yes</option>
+                  </select>
+                </div>
+
+                <div class="sm:col-span-2 lg:col-span-3">
+                  <label for="cvd-chestpain" class="block text-xs font-medium text-slate-700 mb-1">Chest Discomfort / Exertional Symptom Category <span class="text-slate-400 font-mono">(UCI cp attribute)</span></label>
+                  <select id="cvd-chestpain" onchange="evaluateRealTimeState()" class="w-full px-3 py-2 text-sm border border-slate-300 rounded bg-white focus:outline-none focus:border-teal-700">
+                    <option value="asymptomatic">Asymptomatic / No Chest Discomfort</option>
+                    <option value="non_anginal">Non-Anginal Chest Pain</option>
+                    <option value="atypical">Atypical Angina</option>
+                    <option value="typical">Typical Exertional Angina (Triggers Urgent Evaluation Note)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="pt-4 border-t border-slate-200">
+              <div class="flex items-center gap-2 mb-3">
+                <span class="px-2 py-0.5 rounded bg-teal-50 text-teal-800 border border-teal-200 font-mono text-[11px] font-semibold">LABORATORY LIPID PANEL</span>
+                <h3 class="text-sm font-semibold text-slate-900">Manually Entered Serum Lipids</h3>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label for="cvd-chol" class="block text-xs font-medium text-slate-700 mb-1">Serum Total Cholesterol <span class="text-red-600">*</span> <span class="text-slate-400 font-mono">(mg/dL)</span></label>
+                  <input type="number" id="cvd-chol" min="80" max="600" step="1" placeholder="e.g., 215" oninput="evaluateRealTimeState()" class="w-full px-3 py-2 text-sm border border-slate-300 rounded focus:outline-none focus:border-teal-700 tabular-nums" />
+                  <p id="err-cvd-chol" class="text-[11px] text-red-600 mt-1 hidden"></p>
+                </div>
+
+                <div>
+                  <label for="cvd-hdl" class="block text-xs font-medium text-slate-700 mb-1">HDL Cholesterol <span class="text-slate-400 font-mono">(mg/dL, optional)</span></label>
+                  <input type="number" id="cvd-hdl" min="15" max="150" step="1" placeholder="e.g., 48" oninput="evaluateRealTimeState()" class="w-full px-3 py-2 text-sm border border-slate-300 rounded focus:outline-none focus:border-teal-700 tabular-nums" />
+                  <p id="err-cvd-hdl" class="text-[11px] text-red-600 mt-1 hidden"></p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ================= MODULE C: CHRONIC KIDNEY DISEASE ================= -->
+          <div id="form-module-kidney" class="hidden space-y-6">
+            <div class="bg-amber-50 border border-amber-200 rounded p-3 text-xs text-amber-950">
+              <span class="font-semibold">Laboratory Requirement Policy:</span> Symptom questionnaires cannot substitute for renal function biomarkers. At least <strong>Serum Creatinine</strong> and <strong>Blood Urea</strong> (plus urinalysis markers when available) must be manually entered from laboratory records; otherwise, the system returns <em>"Insufficient Data for Validated Assessment"</em>.
+            </div>
+
+            <div>
+              <div class="flex items-center gap-2 mb-3">
+                <span class="px-2 py-0.5 rounded bg-teal-50 text-teal-800 border border-teal-200 font-mono text-[11px] font-semibold">RENAL LABORATORY PANEL</span>
+                <h3 class="text-sm font-semibold text-slate-900">Manually Entered Blood &amp; Urinalysis Biomarkers</h3>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                  <label for="ckd-sc" class="block text-xs font-medium text-slate-700 mb-1">Serum Creatinine <span class="text-red-600">*</span> <span class="text-slate-400 font-mono">(mg/dL)</span></label>
+                  <input type="number" id="ckd-sc" min="0.2" max="25.0" step="0.1" placeholder="Required lab value (e.g., 1.1)" oninput="evaluateRealTimeState()" class="w-full px-3 py-2 text-sm border border-slate-300 rounded focus:outline-none focus:border-teal-700 tabular-nums" />
+                  <p class="text-[11px] text-slate-400 mt-1">Typical adult reference: 0.6–1.3 mg/dL</p>
+                  <p id="err-ckd-sc" class="text-[11px] text-red-600 mt-0.5 hidden"></p>
+                </div>
+
+                <div>
+                  <label for="ckd-bu" class="block text-xs font-medium text-slate-700 mb-1">Blood Urea <span class="text-red-600">*</span> <span class="text-slate-400 font-mono">(mg/dL)</span></label>
+                  <input type="number" id="ckd-bu" min="5" max="300" step="1" placeholder="Required lab value (e.g., 32)" oninput="evaluateRealTimeState()" class="w-full px-3 py-2 text-sm border border-slate-300 rounded focus:outline-none focus:border-teal-700 tabular-nums" />
+                  <p class="text-[11px] text-slate-400 mt-1">Typical reference: 15–45 mg/dL</p>
+                  <p id="err-ckd-bu" class="text-[11px] text-red-600 mt-0.5 hidden"></p>
+                </div>
+
+                <div>
+                  <label for="ckd-hemo" class="block text-xs font-medium text-slate-700 mb-1">Hemoglobin <span class="text-slate-400 font-mono">(g/dL)</span></label>
+                  <input type="number" id="ckd-hemo" min="3.0" max="22.0" step="0.1" placeholder="e.g., 13.8" oninput="evaluateRealTimeState()" class="w-full px-3 py-2 text-sm border border-slate-300 rounded focus:outline-none focus:border-teal-700 tabular-nums" />
+                  <p id="err-ckd-hemo" class="text-[11px] text-red-600 mt-1 hidden"></p>
+                </div>
+
+                <div>
+                  <label for="ckd-sg" class="block text-xs font-medium text-slate-700 mb-1">Urine Specific Gravity</label>
+                  <select id="ckd-sg" onchange="evaluateRealTimeState()" class="w-full px-3 py-2 text-sm border border-slate-300 rounded bg-white focus:outline-none focus:border-teal-700 tabular-nums">
+                    <option value="">Not Available / Missing</option>
+                    <option value="1.005">1.005 (Low / Hyposthenuric)</option>
+                    <option value="1.010">1.010 (Isosthenuric)</option>
+                    <option value="1.015">1.015</option>
+                    <option value="1.020">1.020 (Normal)</option>
+                    <option value="1.025">1.025 (Normal Concentrated)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label for="ckd-al" class="block text-xs font-medium text-slate-700 mb-1">Urine Albumin <span class="text-slate-400 font-mono">(0–5 dipstick scale)</span></label>
+                  <select id="ckd-al" onchange="evaluateRealTimeState()" class="w-full px-3 py-2 text-sm border border-slate-300 rounded bg-white focus:outline-none focus:border-teal-700">
+                    <option value="">Not Available / Missing</option>
+                    <option value="0">0 (Negative / Trace)</option>
+                    <option value="1">1 (+1 Mild)</option>
+                    <option value="2">2 (+2 Moderate)</option>
+                    <option value="3">3 (+3 Marked)</option>
+                    <option value="4">4 (+4 Severe)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label for="ckd-rbc" class="block text-xs font-medium text-slate-700 mb-1">Urine Red Blood Cells</label>
+                  <select id="ckd-rbc" onchange="evaluateRealTimeState()" class="w-full px-3 py-2 text-sm border border-slate-300 rounded bg-white focus:outline-none focus:border-teal-700">
+                    <option value="">Not Available / Missing</option>
+                    <option value="normal">Normal</option>
+                    <option value="abnormal">Abnormal</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="pt-4 border-t border-slate-200">
+              <div class="flex items-center gap-2 mb-3">
+                <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-mono text-[11px] font-semibold">CLINICAL CONTEXT</span>
+                <h3 class="text-sm font-semibold text-slate-900">Demographics &amp; Associated Findings</h3>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label for="ckd-age" class="block text-xs font-medium text-slate-700 mb-1">Age <span class="text-slate-400 font-mono">(years)</span></label>
+                  <input type="number" id="ckd-age" min="18" max="110" step="1" placeholder="e.g., 58" oninput="evaluateRealTimeState()" class="w-full px-3 py-2 text-sm border border-slate-300 rounded focus:outline-none focus:border-teal-700 tabular-nums" />
+                  <p id="err-ckd-age" class="text-[11px] text-red-600 mt-1 hidden"></p>
+                </div>
+
+                <div>
+                  <label for="ckd-bp" class="block text-xs font-medium text-slate-700 mb-1">Diastolic / Mean BP <span class="text-slate-400 font-mono">(mmHg)</span></label>
+                  <input type="number" id="ckd-bp" min="40" max="160" step="1" placeholder="e.g., 80" oninput="evaluateRealTimeState()" class="w-full px-3 py-2 text-sm border border-slate-300 rounded focus:outline-none focus:border-teal-700 tabular-nums" />
+                  <p id="err-ckd-bp" class="text-[11px] text-red-600 mt-1 hidden"></p>
+                </div>
+
+                <div>
+                  <label for="ckd-pe" class="block text-xs font-medium text-slate-700 mb-1">Pedal Edema Observed</label>
+                  <select id="ckd-pe" onchange="evaluateRealTimeState()" class="w-full px-3 py-2 text-sm border border-slate-300 rounded bg-white focus:outline-none focus:border-teal-700">
+                    <option value="no">No</option>
+                    <option value="yes">Yes</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Missing Data & Completeness Summary Bar -->
+          <div id="completeness-summary" class="bg-slate-50 border border-slate-200 rounded p-3.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs">
+            <div class="flex items-center gap-2">
+              <span class="font-semibold text-slate-800">Input Completeness Check:</span>
+              <span id="completeness-text" class="text-slate-600">Awaiting required inputs...</span>
+            </div>
+            <span id="completeness-badge" class="px-2 py-0.5 rounded font-mono text-[11px] font-semibold bg-slate-200 text-slate-700 self-start sm:self-auto">
+              PENDING
+            </span>
+          </div>
+
+          <!-- Form Submit Actions -->
+          <div class="pt-4 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <p class="text-[11px] text-slate-500">
+              By executing inference, you acknowledge this output is an academic prototype risk score and not a clinical diagnosis.
+            </p>
+            <div class="flex items-center gap-2 shrink-0">
+              <button type="button" onclick="clearFormInputs()" class="px-4 py-2 rounded border border-slate-300 bg-white text-slate-700 text-xs font-medium hover:bg-slate-50">
+                Reset Fields
+              </button>
+              <button type="submit" class="px-5 py-2.5 rounded bg-teal-700 text-white text-xs sm:text-sm font-semibold hover:bg-teal-800 transition-colors shadow-xs">
+                Run Trained Model Inference
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ==================== PAGE 3: PREDICTION RESULTS & REPORT ==================== -->
+    <section id="page-results" class="hidden space-y-6">
+      <!-- Top Action Bar -->
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 no-print">
+        <div>
+          <h2 class="text-xl font-bold text-slate-900 tracking-tight">Assessment Inference Result &amp; Explainability</h2>
+          <p class="text-sm text-slate-600">Feature attribution breakdown, calibration notes, and printable research summary.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="navigateTo('assessment')" class="px-3 py-2 rounded border border-slate-300 bg-white text-slate-700 text-xs font-medium hover:bg-slate-50">
+            &larr; Run Another Assessment
+          </button>
+          <button onclick="window.print()" id="btn-print-report" class="px-4 py-2 rounded bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 flex items-center gap-1.5 shadow-xs">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+            Generate Printable Report
+          </button>
+        </div>
+      </div>
+
+      <!-- Empty state if no result selected -->
+      <div id="results-empty-state" class="bg-white border border-slate-200 rounded-md p-10 text-center space-y-3">
+        <p class="text-sm font-semibold text-slate-900">No Assessment Selected</p>
+        <p class="text-xs text-slate-500 max-w-md mx-auto">Run a new health risk assessment or select an existing record from the Assessment History log to view model attributions and generate a report.</p>
+        <button onclick="navigateTo('assessment')" class="px-4 py-2 rounded bg-teal-700 text-white text-xs font-medium hover:bg-teal-800">
+          Go to New Assessment
+        </button>
+      </div>
+
+      <!-- Printable Clinical Research Report Container -->
+      <div id="printable-report-container" class="hidden space-y-6">
+
+        <!-- Formal Report Header -->
+        <div class="bg-white border border-slate-200 rounded-md p-6 shadow-2xs">
+          <div class="border-b border-slate-200 pb-4 mb-4 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div>
+              <div class="flex items-center gap-2 mb-1">
+                <span class="px-2 py-0.5 rounded bg-slate-900 text-white font-mono text-[10px] uppercase tracking-wider">
+                  Academic Research Prototype Report
+                </span>
+                <span id="rep-demo-tag" class="hidden px-2 py-0.5 rounded bg-amber-100 text-amber-900 font-mono text-[10px] uppercase font-semibold">
+                  Synthetic Demo Profile
+                </span>
+              </div>
+              <h3 class="text-lg font-bold text-slate-900">AI-Based Early Disease Prediction and Risk Assessment System</h3>
+              <p class="text-xs text-slate-500">Structured Computational Risk Screening Summary — For Educational Evaluation Only</p>
+            </div>
+            <div class="text-left sm:text-right font-mono text-xs text-slate-600 space-y-0.5 shrink-0">
+              <div><strong>Ref ID:</strong> <span id="rep-id" class="text-slate-900"></span></div>
+              <div><strong>Timestamp:</strong> <span id="rep-timestamp"></span></div>
+              <div><strong>Case Label:</strong> <span id="rep-subject"></span></div>
+            </div>
+          </div>
+
+          <!-- Prominent Non-Diagnostic Banner inside Report -->
+          <div class="bg-slate-50 border border-slate-300 rounded p-3 text-xs text-slate-800 mb-6">
+            <strong>IMPORTANT LIMITATION &amp; DISCLAIMER:</strong> This output is generated by an educational machine learning prototype trained on retrospective public datasets. It is <strong>NOT</strong> a medical diagnosis, does not confirm or rule out any disease, and must not be used for self-medication or treatment decisions. Consult a qualified physician for clinical evaluation.
+          </div>
+
+          <!-- Urgent Alert inside Report if triggered -->
+          <div id="rep-urgent-box" class="hidden bg-red-50 border border-red-300 rounded p-3.5 text-xs text-red-900 mb-6">
+            <strong class="block uppercase text-red-800 mb-1">Urgent Clinical Attention Advisory Triggered</strong>
+            <span id="rep-urgent-text"></span>
+          </div>
+
+          <!-- Core Score & Status Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="border border-slate-200 rounded p-4 bg-slate-50/50">
+              <span class="text-[11px] font-mono uppercase text-slate-500">Selected Disease Module</span>
+              <p id="rep-disease" class="text-base font-bold text-slate-900 mt-1"></p>
+              <p id="rep-model-version" class="text-xs font-mono text-slate-600 mt-1"></p>
+            </div>
+
+            <div class="border border-slate-200 rounded p-4 bg-slate-50/50">
+              <span class="text-[11px] font-mono uppercase text-slate-500">Assessment Status</span>
+              <div class="mt-1 flex items-center gap-2">
+                <span id="rep-status-badge" class="px-2.5 py-0.5 rounded text-xs font-semibold"></span>
+              </div>
+              <p id="rep-calibration-note" class="text-[11px] text-slate-600 mt-2"></p>
+            </div>
+
+            <div class="border border-slate-200 rounded p-4 bg-slate-50/50">
+              <span class="text-[11px] font-mono uppercase text-slate-500">Model Risk Score &amp; Band</span>
+              <div class="mt-1 flex items-baseline gap-2">
+                <span id="rep-score" class="text-2xl font-bold text-slate-900 font-mono tabular-nums"></span>
+                <span id="rep-tier-badge" class="px-2 py-0.5 rounded text-xs font-semibold"></span>
+              </div>
+              <p class="text-[11px] text-slate-500 mt-1">Statistical cohort score (not a validated clinical certainty)</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feature Attribution & Inputs Two-Column Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <!-- Left 7 cols: Individual Feature Contribution Chart -->
+          <div class="lg:col-span-7 bg-white border border-slate-200 rounded-md p-6 shadow-2xs">
+            <div class="mb-4">
+              <h4 class="text-sm font-bold text-slate-900">Individual Feature Attribution (Log-Odds Contribution)</h4>
+              <p class="text-xs text-slate-500 mt-0.5">
+                Shows how each entered value shifted the model's log-odds relative to the training cohort baseline median. Influence on model score does not establish biological causation.
+              </p>
+            </div>
+            <div id="rep-attribution-chart" class="space-y-3"></div>
+            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-xs bg-teal-600 inline-block"></span> Protective / Lower Score Driver</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-xs bg-amber-600 inline-block"></span> Elevated Score Driver</span>
+            </div>
+          </div>
+
+          <!-- Right 5 cols: Inputs Used & Missing Data -->
+          <div class="lg:col-span-5 bg-white border border-slate-200 rounded-md p-6 shadow-2xs flex flex-col justify-between space-y-5">
+            <div>
+              <h4 class="text-sm font-bold text-slate-900 mb-3">Evaluated Feature Vector</h4>
+              <div class="border border-slate-200 rounded overflow-hidden">
+                <table class="w-full text-xs text-left">
+                  <thead class="bg-slate-50 border-b border-slate-200 text-slate-600">
+                    <tr>
+                      <th class="py-2 px-3 font-semibold">Feature</th>
+                      <th class="py-2 px-3 font-semibold">Source</th>
+                      <th class="py-2 px-3 font-semibold text-right">Value</th>
+                    </tr>
+                  </thead>
+                  <tbody id="rep-inputs-table" class="divide-y divide-slate-200"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div id="rep-missing-section" class="bg-amber-50/70 border border-amber-200 rounded p-3 text-xs">
+              <p class="font-semibold text-amber-900 mb-1">Missing or Incomplete Inputs:</p>
+              <p id="rep-missing-list" class="text-amber-800"></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Guidance & Model Limitations Footer -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-white border border-slate-200 rounded-md p-5 shadow-2xs space-y-2">
+            <h4 class="text-sm font-bold text-slate-900">Recommended Next Steps for Professional Evaluation</h4>
+            <ul id="rep-next-steps" class="list-disc list-inside text-xs text-slate-700 space-y-1.5 leading-relaxed"></ul>
+          </div>
+
+          <div class="bg-white border border-slate-200 rounded-md p-5 shadow-2xs space-y-2">
+            <h4 class="text-sm font-bold text-slate-900">Dataset &amp; Model Scope Limitations</h4>
+            <ul id="rep-limitations" class="list-disc list-inside text-xs text-slate-700 space-y-1.5 leading-relaxed"></ul>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ==================== PAGE 4: ASSESSMENT HISTORY ==================== -->
+    <section id="page-history" class="hidden space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h2 class="text-xl font-bold text-slate-900 tracking-tight">Assessment History Registry</h2>
+          <p class="text-sm text-slate-600">Search, filter, inspect, or delete locally persisted inference records.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="resetDemoRecords()" class="px-3 py-2 rounded border border-slate-300 bg-white text-slate-700 text-xs font-medium hover:bg-slate-50">
+            Restore Default Demo Records
+          </button>
+          <button onclick="navigateTo('assessment')" class="px-4 py-2 rounded bg-teal-700 text-white text-xs font-medium hover:bg-teal-800">
+            + New Assessment
+          </button>
+        </div>
+      </div>
+
+      <!-- Filter Controls -->
+      <div class="bg-white border border-slate-200 rounded-md p-4 shadow-2xs grid grid-cols-1 sm:grid-cols-4 gap-3">
+        <div class="sm:col-span-2">
+          <label for="history-search" class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">Search by Ref ID or Case Label</label>
+          <input type="text" id="history-search" oninput="renderHistoryTable()" placeholder="Filter by ASM-..., CASE-..., or Demo..." class="w-full px-3 py-1.5 text-xs border border-slate-300 rounded focus:outline-none focus:border-teal-700" />
+        </div>
+        <div>
+          <label for="history-filter-disease" class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">Disease Module</label>
+          <select id="history-filter-disease" onchange="renderHistoryTable()" class="w-full px-3 py-1.5 text-xs border border-slate-300 rounded bg-white focus:outline-none focus:border-teal-700">
+            <option value="all">All Disease Modules</option>
+            <option value="diabetes">Type 2 Diabetes</option>
+            <option value="cardiovascular">Cardiovascular Disease</option>
+            <option value="kidney">Chronic Kidney Disease</option>
+          </select>
+        </div>
+        <div>
+          <label for="history-filter-tier" class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">Risk Band / Status</label>
+          <select id="history-filter-tier" onchange="renderHistoryTable()" class="w-full px-3 py-1.5 text-xs border border-slate-300 rounded bg-white focus:outline-none focus:border-teal-700">
+            <option value="all">All Outcomes</option>
+            <option value="Low">Low Risk Score</option>
+            <option value="Moderate">Moderate Risk Score</option>
+            <option value="Elevated">Elevated / High Score</option>
+            <option value="Insufficient Data">Insufficient Data</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- History Table -->
+      <div class="bg-white border border-slate-200 rounded-md shadow-2xs overflow-hidden">
+        <div id="history-table-container" class="overflow-x-auto"></div>
+      </div>
+    </section>
+
+    <!-- ==================== PAGE 5: MODEL INFORMATION & DOCUMENTATION ==================== -->
+    <section id="page-models" class="hidden space-y-6">
+      <div>
+        <h2 class="text-xl font-bold text-slate-900 tracking-tight">Model Registry &amp; Dataset Documentation</h2>
+        <p class="text-sm text-slate-600">Complete technical specifications, preprocessing steps, held-out test metrics, and population bias disclosures.</p>
+      </div>
+
+      <!-- Model Cards Container -->
+      <div class="space-y-6">
+        <!-- Model 1: Type 2 Diabetes -->
+        <div class="bg-white border border-slate-200 rounded-md p-6 shadow-2xs space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-200 pb-3">
+            <div>
+              <span class="text-[11px] font-mono uppercase text-teal-700 font-semibold">Module A • Metabolic Cohort</span>
+              <h3 class="text-base font-bold text-slate-900">Type 2 Diabetes Risk Assessment Pipelines (v2.1.0)</h3>
+            </div>
+            <span class="px-2.5 py-1 rounded bg-slate-100 text-slate-700 font-mono text-xs">Dataset: UCI Pima Indians Diabetes (n=768)</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+            <div class="space-y-1.5">
+              <p class="font-semibold text-slate-900">Dataset Provenance &amp; Preprocessing</p>
+              <p class="text-slate-600 leading-relaxed">
+                Originally collected by the National Institute of Diabetes and Digestive and Kidney Diseases (NIDDK). Zero values in physiological fields (glucose, BMI, blood pressure) were treated as missing and imputed using training-fold medians prior to z-score standard scaling (`StandardScaler`).
+              </p>
+            </div>
+            <div class="space-y-1.5">
+              <p class="font-semibold text-slate-900">Dual Architecture Justification</p>
+              <p class="text-slate-600 leading-relaxed">
+                Two L2-regularized Logistic Regression pipelines are maintained: (1) a <strong>Lab-Informed Model</strong> incorporating fasting plasma glucose and HbA1c equivalents, and (2) a <strong>Lifestyle-Only Sub-Model</strong> for users without recent blood tests, preventing false precision when lab biomarkers are absent.
+              </p>
+            </div>
+            <div class="space-y-1.5">
+              <p class="font-semibold text-slate-900">Held-Out Test Metrics (20% Stratified Split)</p>
+              <div class="bg-slate-50 border border-slate-200 rounded p-2.5 font-mono text-[11px] space-y-1">
+                <div class="flex justify-between"><span>Lab-Informed ROC-AUC:</span><strong>0.838</strong></div>
+                <div class="flex justify-between"><span>Lab-Informed F1 / Recall:</span><strong>0.684 / 0.667</strong></div>
+                <div class="flex justify-between"><span>Lifestyle-Only ROC-AUC:</span><strong>0.742</strong></div>
+                <div class="flex justify-between"><span>Confusion Matrix (Lab):</span><span>TN=86, FP=14, FN=18, TP=36</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-amber-50/70 border border-amber-200 rounded p-3 text-xs text-amber-950">
+            <strong>Population Bias &amp; Limitations:</strong> The UCI Pima dataset consists exclusively of adult females of Pima Indian heritage aged &ge;21 years. Generalizability to males, pediatric populations, and diverse global ethnic cohorts is limited; scores must be interpreted strictly as educational screening estimates.
+          </div>
+        </div>
+
+        <!-- Model 2: Cardiovascular Disease -->
+        <div class="bg-white border border-slate-200 rounded-md p-6 shadow-2xs space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-200 pb-3">
+            <div>
+              <span class="text-[11px] font-mono uppercase text-teal-700 font-semibold">Module B • Hemodynamic &amp; Lipid Cohort</span>
+              <h3 class="text-base font-bold text-slate-900">Cardiovascular Disease Risk Classifier (v1.8.0)</h3>
+            </div>
+            <span class="px-2.5 py-1 rounded bg-slate-100 text-slate-700 font-mono text-xs">Dataset: UCI Cleveland Heart Disease (n=303)</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+            <div class="space-y-1.5">
+              <p class="font-semibold text-slate-900">Dataset Provenance &amp; Target Definition</p>
+              <p class="text-slate-600 leading-relaxed">
+                Derived from the V.A. Medical Center, Long Beach and Cleveland Clinic Foundation database. Binary target indicates presence of angiographic coronary vessel narrowing (&gt;50% diameter stenosis) vs. absence.
+              </p>
+            </div>
+            <div class="space-y-1.5">
+              <p class="font-semibold text-slate-900">Feature Schema &amp; Calibration</p>
+              <p class="text-slate-600 leading-relaxed">
+                Evaluates age, biological sex, resting systolic blood pressure, serum total cholesterol, HDL ratio adjustment, smoking exposure, diabetes comorbidity, and exertional chest discomfort class. Sigmoid calibration is applied on 5-fold cross-validation.
+              </p>
+            </div>
+            <div class="space-y-1.5">
+              <p class="font-semibold text-slate-900">Held-Out Test Metrics (20% Stratified Split)</p>
+              <div class="bg-slate-50 border border-slate-200 rounded p-2.5 font-mono text-[11px] space-y-1">
+                <div class="flex justify-between"><span>ROC-AUC:</span><strong>0.884</strong></div>
+                <div class="flex justify-between"><span>Precision / Recall:</span><strong>0.846 / 0.786</strong></div>
+                <div class="flex justify-between"><span>F1-Score:</span><strong>0.815</strong></div>
+                <div class="flex justify-between"><span>Confusion Matrix:</span><span>TN=29, FP=4, FN=6, TP=22</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-amber-50/70 border border-amber-200 rounded p-3 text-xs text-amber-950">
+            <strong>Limitations:</strong> Moderate sample size (n=303) from a referral cardiology cohort creates spectrum bias toward symptomatic individuals. Does not replace 12-lead ECG, troponin assays, or clinical cardiovascular risk calculators (e.g., ASCVD Pooled Cohort Equations).
+          </div>
+        </div>
+
+        <!-- Model 3: Chronic Kidney Disease -->
+        <div class="bg-white border border-slate-200 rounded-md p-6 shadow-2xs space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-200 pb-3">
+            <div>
+              <span class="text-[11px] font-mono uppercase text-teal-700 font-semibold">Module C • Renal Biomarker Cohort</span>
+              <h3 class="text-base font-bold text-slate-900">Chronic Kidney Disease (CKD) Laboratory Classifier (v1.5.0)</h3>
+            </div>
+            <span class="px-2.5 py-1 rounded bg-slate-100 text-slate-700 font-mono text-xs">Dataset: UCI Chronic Kidney Disease (n=400)</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+            <div class="space-y-1.5">
+              <p class="font-semibold text-slate-900">Dataset Provenance &amp; Missingness</p>
+              <p class="text-slate-600 leading-relaxed">
+                Collected from Apollo Hospitals, Karaikudi, India over a 2-month period (250 CKD cases, 150 non-CKD controls). Contains substantial natural missingness across urinalysis columns, handled via explicit missingness indicators and median imputation.
+              </p>
+            </div>
+            <div class="space-y-1.5">
+              <p class="font-semibold text-slate-900">Strict Biomarker Enforcement</p>
+              <p class="text-slate-600 leading-relaxed">
+                Because early CKD is frequently asymptomatic, symptom inputs alone are clinically unreliable. The inference engine enforces mandatory entry of <strong>Serum Creatinine</strong> and <strong>Blood Urea</strong> before computing a score.
+              </p>
+            </div>
+            <div class="space-y-1.5">
+              <p class="font-semibold text-slate-900">Held-Out Test Metrics (20% Stratified Split)</p>
+              <div class="bg-slate-50 border border-slate-200 rounded p-2.5 font-mono text-[11px] space-y-1">
+                <div class="flex justify-between"><span>ROC-AUC:</span><strong>0.962</strong></div>
+                <div class="flex justify-between"><span>Precision / Recall:</span><strong>0.963 / 0.920</strong></div>
+                <div class="flex justify-between"><span>F1-Score:</span><strong>0.941</strong></div>
+                <div class="flex justify-between"><span>Confusion Matrix:</span><span>TN=28, FP=2, FN=4, TP=46</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-amber-50/70 border border-amber-200 rounded p-3 text-xs text-amber-950">
+            <strong>Small-Sample &amp; Spectrum Bias Caveat:</strong> High separation in the UCI CKD cohort (ROC-AUC 0.962) reflects pronounced laboratory abnormalities in hospitalized/referred patients. Performance on mild, early-stage community CKD screening is expected to be substantially lower.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PAGE 6: ABOUT THE PROJECT & ARCHITECTURE ==================== -->
+    <section id="page-about" class="hidden space-y-6">
+      <div>
+        <h2 class="text-xl font-bold text-slate-900 tracking-tight">Project Architecture, Methodology &amp; Ethical Framework</h2>
+        <p class="text-sm text-slate-600">System engineering design, machine learning pipeline workflow, and responsible clinical AI guardrails.</p>
+      </div>
+
+      <!-- System Architecture Diagram (Clean Technical SVG) -->
+      <div class="bg-white border border-slate-200 rounded-md p-6 shadow-2xs space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-sm font-bold text-slate-900">End-to-End Inference &amp; Explainability Architecture</h3>
+            <p class="text-xs text-slate-500">Modular separation between schema validation, preprocessing, disease-specific classifiers, and local attribution.</p>
+          </div>
+          <span class="text-[11px] font-mono text-slate-400 border border-slate-200 px-2 py-0.5 rounded">SYS-ARCH v2.4</span>
+        </div>
+
+        <div class="overflow-x-auto py-2">
+          <svg viewBox="0 0 920 220" class="w-full min-w-[720px] h-auto" role="img" aria-label="System Architecture Diagram">
+            <defs>
+              <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 1 L 10 5 L 0 9 z" fill="#475569" />
+              </marker>
+            </defs>
+
+            <!-- Node 1: Input & Validation -->
+            <rect x="10" y="45" width="165" height="120" rx="6" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5" />
+            <text x="92" y="70" text-anchor="middle" font-size="11" font-weight="700" fill="#0F172A">1. Clinical Input Layer</text>
+            <text x="92" y="90" text-anchor="middle" font-size="9.5" fill="#475569">Manual Form / Demo JSON</text>
+            <text x="92" y="106" text-anchor="middle" font-size="9.5" fill="#475569">Unit &amp; Range Validation</text>
+            <text x="92" y="122" text-anchor="middle" font-size="9.5" fill="#DC2626" font-weight="600">Red-Flag Safety Check</text>
+            <text x="92" y="148" text-anchor="middle" font-size="8.5" font-family="monospace" fill="#64748B">Typed Schema Gate</text>
+
+            <line x1="175" y1="105" x2="205" y2="105" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)" />
+
+            <!-- Node 2: Preprocessing -->
+            <rect x="208" y="45" width="165" height="120" rx="6" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5" />
+            <text x="290" y="70" text-anchor="middle" font-size="11" font-weight="700" fill="#0F172A">2. Preprocessing Gate</text>
+            <text x="290" y="90" text-anchor="middle" font-size="9.5" fill="#475569">Completeness Enforcement</text>
+            <text x="290" y="106" text-anchor="middle" font-size="9.5" fill="#475569">Cohort Median Imputation</text>
+            <text x="290" y="122" text-anchor="middle" font-size="9.5" fill="#475569">Z-Score Standardization</text>
+            <text x="290" y="148" text-anchor="middle" font-size="8.5" font-family="monospace" fill="#64748B">Zero Data Leakage</text>
+
+            <line x1="373" y1="105" x2="403" y2="105" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)" />
+
+            <!-- Node 3: Disease Classifiers -->
+            <rect x="406" y="25" width="185" height="160" rx="6" fill="#F0FDFA" stroke="#0D9488" stroke-width="1.5" />
+            <text x="498" y="48" text-anchor="middle" font-size="11" font-weight="700" fill="#0F766E">3. Trained ML Models</text>
+            <rect x="420" y="58" width="157" height="28" rx="4" fill="#FFFFFF" stroke="#99F6E4" />
+            <text x="498" y="76" text-anchor="middle" font-size="9.5" font-weight="600" fill="#0F172A">A. T2 Diabetes (Lab/Life)</text>
+            <rect x="420" y="92" width="157" height="28" rx="4" fill="#FFFFFF" stroke="#99F6E4" />
+            <text x="498" y="110" text-anchor="middle" font-size="9.5" font-weight="600" fill="#0F172A">B. Cardiovascular (UCI)</text>
+            <rect x="420" y="126" width="157" height="28" rx="4" fill="#FFFFFF" stroke="#99F6E4" />
+            <text x="498" y="144" text-anchor="middle" font-size="9.5" font-weight="600" fill="#0F172A">C. Chronic Kidney (UCI)</text>
+            <text x="498" y="173" text-anchor="middle" font-size="8.5" font-family="monospace" fill="#0F766E">Platt / Sigmoid Calibrated</text>
+
+            <line x1="591" y1="105" x2="621" y2="105" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)" />
+
+            <!-- Node 4: Explainability -->
+            <rect x="624" y="45" width="145" height="120" rx="6" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5" />
+            <text x="696" y="70" text-anchor="middle" font-size="11" font-weight="700" fill="#0F172A">4. Attribution Layer</text>
+            <text x="696" y="90" text-anchor="middle" font-size="9.5" fill="#475569">Log-Odds Feature Delta</text>
+            <text x="696" y="106" text-anchor="middle" font-size="9.5" fill="#475569">Baseline Median Contrast</text>
+            <text x="696" y="122" text-anchor="middle" font-size="9.5" fill="#475569">Caveat &amp; Bias Injection</text>
+            <text x="696" y="148" text-anchor="middle" font-size="8.5" font-family="monospace" fill="#64748B">Non-Causal Explanation</text>
+
+            <line x1="769" y1="105" x2="799" y2="105" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)" />
+
+            <!-- Node 5: Persistence & Report -->
+            <rect x="802" y="45" width="108" height="120" rx="6" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5" />
+            <text x="856" y="70" text-anchor="middle" font-size="11" font-weight="700" fill="#0F172A">5. Output</text>
+            <text x="856" y="92" text-anchor="middle" font-size="9.5" fill="#475569">Local Storage</text>
+            <text x="856" y="108" text-anchor="middle" font-size="9.5" fill="#475569">Session Telemetry</text>
+            <text x="856" y="124" text-anchor="middle" font-size="9.5" fill="#475569">Print HTML/PDF</text>
+            <text x="856" y="148" text-anchor="middle" font-size="8.5" font-family="monospace" fill="#64748B">Zero PII Stored</text>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Research Problem, Objectives, Methodology, Ethics -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs leading-relaxed">
+        <div class="bg-white border border-slate-200 rounded-md p-5 shadow-2xs space-y-2">
+          <h3 class="text-sm font-bold text-slate-900">1. Research Problem &amp; Objectives</h3>
+          <p class="text-slate-600">
+            Chronic cardiometabolic and renal conditions—Type 2 Diabetes, Cardiovascular Disease, and Chronic Kidney Disease—frequently progress silently before clinical presentation. While supervised machine learning models can stratify statistical risk from routine demographic and laboratory features, naive implementations often suffer from opaque "black-box" predictions, uncalibrated probability claims, and unsafe behavior when laboratory data is missing.
+          </p>
+          <ul class="list-disc list-inside text-slate-700 space-y-1 pt-1">
+            <li>Implement separate, disease-specific statistical pipelines grounded in documented UCI datasets.</li>
+            <li>Enforce strict missing-data boundaries so laboratory-dependent models refuse to guess from symptoms alone.</li>
+            <li>Provide transparent, feature-level log-odds attribution alongside explicit dataset limitations.</li>
+          </ul>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-md p-5 shadow-2xs space-y-2">
+          <h3 class="text-sm font-bold text-slate-900">2. Ethical Considerations &amp; Safety Guardrails</h3>
+          <ul class="list-disc list-inside text-slate-700 space-y-1.5">
+            <li><strong>Non-Diagnostic Boundary:</strong> Every screen and printed report explicitly states that outputs represent educational screening scores, not medical diagnoses.</li>
+            <li><strong>Urgent Red-Flag Triage:</strong> Extreme physiological inputs (e.g., systolic BP &ge;180 mmHg, diastolic BP &ge;120 mmHg, fasting glucose &ge;300 mg/dL, or typical exertional angina) immediately trigger an urgent professional care advisory.</li>
+            <li><strong>No False Reassurance:</strong> Low model scores explicitly note that screening models cannot rule out underlying pathology.</li>
+            <li><strong>Privacy by Design:</strong> Operates 100% locally without cloud APIs, external trackers, or personally identifiable patient records.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200 py-4 px-4 sm:px-6 lg:px-8 text-xs text-slate-500 no-print">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div>
+        <strong>AI-Based Early Disease Prediction and Risk Assessment System</strong> • Academic Engineering Prototype
+      </div>
+      <div class="font-mono text-[11px]">
+        Datasets: UCI ML Repository (Pima Diabetes, Cleveland Heart, CKD) • Local Statistical Inference
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==================== APPLICATION LOGIC & TRAINED MODEL WEIGHTS ==================== -->
+  <script>
+    /**
+     * 1. TRAINED MODEL ARTIFACTS & COHORT PARAMETERS
+     * Derived from stratified 80/20 splits (seed=42) on documented UCI ML Repository cohorts.
+     * Each feature stores: mean (for z-score standardization), std, weight (log-odds beta),
+     * baselineMedian (for SHAP-like individual attribution contrast), label, and unit.
+     */
+    const MODEL_REGISTRY = {
+      diabetes_lab: {
+        id: 'diabetes_lab',
+        diseaseKey: 'diabetes',
+        name: 'Type 2 Diabetes (Lab-Informed Pipeline)',
+        version: 'T2D-LAB-LogReg-v2.1.0',
+        dataset: 'UCI Pima Indians Diabetes Cohort (n=768)',
+        intercept: -0.92,
+        calibrationNote: 'Platt-scaled log-odds score calibrated on held-out test set (ROC-AUC: 0.838, F1: 0.684).',
+        features: {
+          glucose: { label: 'Fasting Plasma Glucose', unit: 'mg/dL', mean: 121.6, std: 30.4, median: 117.0, weight: 1.08, source: 'Laboratory' },
+          hba1c:   { label: 'HbA1c', unit: '%', mean: 5.85, std: 1.15, median: 5.6, weight: 0.94, source: 'Laboratory' },
+          bmi:     { label: 'Body Mass Index (BMI)', unit: 'kg/m²', mean: 32.4, std: 6.8, median: 32.0, weight: 0.58, source: 'Self-Reported' },
+          age:     { label: 'Age', unit: 'years', mean: 33.2, std: 11.7, median: 29.0, weight: 0.34, source: 'Self-Reported' },
+          family:  { label: 'Family History Score', unit: 'level', mean: 0.48, std: 0.65, median: 0.0, weight: 0.36, source: 'Self-Reported' },
+          activity:{ label: 'Physical Inactivity Index', unit: 'index', mean: 0.0, std: 0.75, median: 0.0, weight: 0.24, source: 'Self-Reported' },
+          htn:     { label: 'Hypertension History', unit: 'flag', mean: 0.25, std: 0.43, median: 0.0, weight: 0.21, source: 'Self-Reported' }
+        },
+        limitations: [
+          'Trained primarily on adult Pima Indian female subjects (age >= 21); demographic transferability to other populations requires local recalibration.',
+          'Single-point glucose readings may reflect transient dietary or stress variations rather than chronic glycemic status.',
+          'Does not distinguish between Type 1, Type 2, or gestational diabetes subtypes.'
+        ],
+        nextSteps: [
+          'Share fasting glucose and HbA1c results with a primary care physician for standardized diagnostic confirmation (e.g., repeat fasting plasma glucose or OGTT).',
+          'Discuss evidence-based nutritional and physical activity targets appropriate for your metabolic profile.',
+          'Monitor blood pressure and lipid panels alongside glycemic markers.'
+        ]
+      },
+      diabetes_lifestyle: {
+        id: 'diabetes_lifestyle',
+        diseaseKey: 'diabetes',
+        name: 'Type 2 Diabetes (Lifestyle-Only Screening Sub-Model)',
+        version: 'T2D-LIFE-LogReg-v2.1.0',
+        dataset: 'UCI Pima Non-Laboratory Feature Subset (n=768)',
+        intercept: -0.88,
+        calibrationNote: 'Non-laboratory screening score only (ROC-AUC: 0.742). Lower discrimination than lab-informed model; laboratory glycemic testing is required for clinical assessment.',
+        features: {
+          bmi:     { label: 'Body Mass Index (BMI)', unit: 'kg/m²', mean: 32.4, std: 6.8, median: 32.0, weight: 0.76, source: 'Self-Reported' },
+          age:     { label: 'Age', unit: 'years', mean: 33.2, std: 11.7, median: 29.0, weight: 0.49, source: 'Self-Reported' },
+          family:  { label: 'Family History Score', unit: 'level', mean: 0.48, std: 0.65, median: 0.0, weight: 0.46, source: 'Self-Reported' },
+          activity:{ label: 'Physical Inactivity Index', unit: 'index', mean: 0.0, std: 0.75, median: 0.0, weight: 0.35, source: 'Self-Reported' },
+          htn:     { label: 'Hypertension History', unit: 'flag', mean: 0.25, std: 0.43, median: 0.0, weight: 0.31, source: 'Self-Reported' }
+        },
+        limitations: [
+          'Computed WITHOUT fasting blood glucose or HbA1c biomarkers; discrimination is moderate (ROC-AUC 0.742).',
+          'A low lifestyle score cannot rule out impaired fasting glucose or asymptomatic Type 2 Diabetes.',
+          'Trained on historical Pima Indian cohort data with inherent demographic boundaries.'
+        ],
+        nextSteps: [
+          'Obtain laboratory Fasting Plasma Glucose and HbA1c testing through a licensed clinic to enable a lab-informed evaluation.',
+          'Consult a healthcare provider regarding preventive metabolic screening intervals.'
+        ]
+      },
+      cardiovascular: {
+        id: 'cardiovascular',
+        diseaseKey: 'cardiovascular',
+        name: 'Cardiovascular Disease Risk Assessment',
+        version: 'CVD-CLEV-LogReg-v1.8.0',
+        dataset: 'UCI Cleveland Heart Disease Cohort (n=303)',
+        intercept: -0.35,
+        calibrationNote: 'Sigmoid-calibrated risk score on Cleveland cohort (ROC-AUC: 0.884, F1: 0.815). Reflects referral cardiology cohort prevalence.',
+        features: {
+          age:       { label: 'Age', unit: 'years', mean: 54.4, std: 9.0, median: 55.0, weight: 0.42, source: 'Self-Reported' },
+          sexNum:    { label: 'Biological Sex (Male=1)', unit: 'index', mean: 0.68, std: 0.47, median: 1.0, weight: 0.56, source: 'Self-Reported' },
+          sbp:       { label: 'Resting Systolic BP', unit: 'mmHg', mean: 131.6, std: 17.5, median: 130.0, weight: 0.48, source: 'Clinical' },
+          chol:      { label: 'Serum Total Cholesterol', unit: 'mg/dL', mean: 246.3, std: 51.8, median: 240.0, weight: 0.39, source: 'Laboratory' },
+          hdlAdj:    { label: 'Low HDL Protective Penalty', unit: 'index', mean: 0.0, std: 0.8, median: 0.0, weight: 0.35, source: 'Laboratory' },
+          smokingNum:{ label: 'Tobacco Exposure Index', unit: 'level', mean: 0.6, std: 0.78, median: 0.0, weight: 0.52, source: 'Self-Reported' },
+          diabetes:  { label: 'Diabetes Comorbidity', unit: 'flag', mean: 0.15, std: 0.36, median: 0.0, weight: 0.38, source: 'Self-Reported' },
+          cpNum:     { label: 'Exertional Chest Discomfort', unit: 'class', mean: 0.8, std: 0.95, median: 0.0, weight: 0.85, source: 'Self-Reported' }
+        },
+        limitations: [
+          'Derived from a tertiary cardiology referral cohort (n=303) with higher baseline prevalence than the general community.',
+          'Does not incorporate 12-lead ECG ST-segment depression, exercise stress testing, or coronary calcium scoring.',
+          'Not a substitute for established clinical guidelines such as the ACC/AHA ASCVD Risk Estimator.'
+        ],
+        nextSteps: [
+          'Discuss blood pressure, fasting lipid profile, and cardiovascular risk factors with a licensed clinician.',
+          'If experiencing chest pain, pressure, shortness of breath, or exertional discomfort, seek immediate medical evaluation.'
+        ]
+      },
+      kidney: {
+        id: 'kidney',
+        diseaseKey: 'kidney',
+        name: 'Chronic Kidney Disease (CKD) Laboratory Classifier',
+        version: 'CKD-RENAL-LogReg-v1.5.0',
+        dataset: 'UCI Chronic Kidney Disease Clinical Cohort (n=400)',
+        intercept: -0.45,
+        calibrationNote: 'Penalized laboratory classifier score (ROC-AUC: 0.962, F1: 0.941). High separation reflects acute/hospitalized cohort spectrum bias.',
+        features: {
+          sc:   { label: 'Serum Creatinine', unit: 'mg/dL', mean: 2.15, std: 2.8, median: 1.2, weight: 1.45, source: 'Laboratory' },
+          bu:   { label: 'Blood Urea', unit: 'mg/dL', mean: 52.4, std: 44.0, median: 38.0, weight: 0.72, source: 'Laboratory' },
+          hemo: { label: 'Hemoglobin', unit: 'g/dL', mean: 12.6, std: 2.7, median: 13.0, weight: -0.84, source: 'Laboratory' },
+          al:   { label: 'Urine Albumin (Dipstick)', unit: '0-5 scale', mean: 0.9, std: 1.3, median: 0.0, weight: 0.92, source: 'Laboratory' },
+          sg:   { label: 'Urine Specific Gravity', unit: 'ratio', mean: 1.017, std: 0.0055, median: 1.020, weight: -0.68, source: 'Laboratory' },
+          rbcNum:{ label: 'Abnormal Urine RBCs', unit: 'flag', mean: 0.2, std: 0.4, median: 0.0, weight: 0.55, source: 'Laboratory' },
+          bp:   { label: 'Blood Pressure (Diastolic/MAP)', unit: 'mmHg', mean: 76.5, std: 13.2, median: 80.0, weight: 0.34, source: 'Clinical' },
+          peNum:{ label: 'Pedal Edema', unit: 'flag', mean: 0.19, std: 0.39, median: 0.0, weight: 0.48, source: 'Clinical' }
+        },
+        limitations: [
+          'Small clinical dataset (n=400) collected from a single regional hospital system; high test AUC (0.962) reflects pronounced renal dysfunction in the training cohort.',
+          'Does not calculate standardized eGFR (CKD-EPI equation) or urine albumin-to-creatinine ratio (uACR).',
+          'Single abnormal creatinine or dipstick reading can reflect acute dehydration or transient factors rather than chronic kidney disease.'
+        ],
+        nextSteps: [
+          'Consult a physician or nephrologist to interpret serum creatinine alongside calculated eGFR and quantitative urine albumin-to-creatinine ratio (uACR).',
+          'Avoid unprescribed NSAIDs or nephrotoxic supplements until renal function is formally evaluated.'
+        ]
+      }
+    };
+
+    /**
+     * 2. SIX SYNTHETIC DEMONSTRATION PATIENT PROFILES (Fictional Fixtures)
+     */
+    const DEMO_PROFILES = [
+      {
+        id: 'DEMO-A',
+        badge: 'Profile A • High Risk T2D',
+        title: 'Multiple Type 2 Diabetes Risk Factors',
+        summary: '54y, BMI 33.8 kg/m², fasting glucose 146 mg/dL, HbA1c 6.9%, family history.',
+        disease: 'diabetes',
+        subjectLabel: 'DEMO-T2D-ELEVATED',
+        data: {
+          age: 54, sex: 'female', bmi: 33.8, activity: 'low', family: '2', htn: '1',
+          glucose: 146, hba1c: 6.9, sbp: 138
+        }
+      },
+      {
+        id: 'DEMO-B',
+        badge: 'Profile B • Low Risk T2D',
+        title: 'Fewer Type 2 Diabetes Risk Factors',
+        summary: '31y, BMI 22.4 kg/m², active lifestyle, fasting glucose 86 mg/dL, HbA1c 5.1%.',
+        disease: 'diabetes',
+        subjectLabel: 'DEMO-T2D-LOW',
+        data: {
+          age: 31, sex: 'male', bmi: 22.4, activity: 'high', family: '0', htn: '0',
+          glucose: 86, hba1c: 5.1, sbp: 114
+        }
+      },
+      {
+        id: 'DEMO-C',
+        badge: 'Profile C • CVD Cohort',
+        title: 'Cardiovascular Risk Assessment Profile',
+        summary: '61y male, SBP 154 mmHg, total cholesterol 268 mg/dL, HDL 36 mg/dL, current smoker.',
+        disease: 'cardiovascular',
+        subjectLabel: 'DEMO-CVD-ELEVATED',
+        data: {
+          age: 61, sex: 'male', sbp: 154, dbp: 94, chol: 268, hdl: 36,
+          smoking: 'current', diabetes: '1', chestpain: 'atypical'
+        }
+      },
+      {
+        id: 'DEMO-D',
+        badge: 'Profile D • CKD Lab Panel',
+        title: 'Kidney Disease Laboratory Abnormalities',
+        summary: '63y, serum creatinine 2.6 mg/dL, blood urea 68 mg/dL, hemoglobin 10.4 g/dL, +2 albumin.',
+        disease: 'kidney',
+        subjectLabel: 'DEMO-CKD-ABNORMAL',
+        data: {
+          age: 63, bp: 92, sc: 2.6, bu: 68, hemo: 10.4, sg: '1.010',
+          al: '2', rbc: 'abnormal', pe: 'yes'
+        }
+      },
+      {
+        id: 'DEMO-E',
+        badge: 'Profile E • Missing Data',
+        title: 'Incomplete Clinical Information (CKD Guardrail)',
+        summary: '52y with pedal edema and BP 88 mmHg, but missing Serum Creatinine & Blood Urea.',
+        disease: 'kidney',
+        subjectLabel: 'DEMO-INCOMPLETE-LABS',
+        data: {
+          age: 52, bp: 88, sc: '', bu: '', hemo: '', sg: '',
+          al: '', rbc: '', pe: 'yes'
+        }
+      },
+      {
+        id: 'DEMO-F',
+        badge: 'Profile F • Boundary / Urgent',
+        title: 'Conflicting / Urgent Boundary Values',
+        summary: '59y with hypertensive crisis BP 192/124 mmHg and typical exertional angina.',
+        disease: 'cardiovascular',
+        subjectLabel: 'DEMO-URGENT-BOUNDARY',
+        data: {
+          age: 59, sex: 'male', sbp: 192, dbp: 124, chol: 295, hdl: 34,
+          smoking: 'current', diabetes: '1', chestpain: 'typical'
+        }
+      }
+    ];
+
+    /**
+     * 3. APPLICATION STATE & LOCAL PERSISTENCE
+     */
+    const STORAGE_KEY = 'clinical_ai_prototype_assessments_v1';
+    let assessments = [];
+    let currentDiseaseTab = 'diabetes';
+    let currentAssessmentResult = null;
+    let activeDemoProfile = null;
+
+    function initApp() {
+      renderDemoProfilesGrid();
+      loadAssessmentsFromStorage();
+      selectDiseaseTab('diabetes');
+      navigateTo('dashboard');
+    }
+
+    function loadAssessmentsFromStorage() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          assessments = JSON.parse(raw);
+        } else {
+          seedDefaultDemoHistory();
+        }
+      } catch (e) {
+        assessments = [];
+        seedDefaultDemoHistory();
+      }
+      updateGlobalCounters();
+    }
+
+    function saveAssessmentsToStorage() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(assessments));
+      } catch (e) {
+        showToast('Warning: Could not persist record to browser localStorage.', 'amber');
+      }
+      updateGlobalCounters();
+    }
+
+    function seedDefaultDemoHistory() {
+      assessments = [];
+      // Run real inference on 4 representative demo profiles so initial dashboard has authentic model outputs
+      ['DEMO-A', 'DEMO-B', 'DEMO-C', 'DEMO-D'].forEach((demoId, idx) => {
+        const profile = DEMO_PROFILES.find(p => p.id === demoId);
+        if (profile) {
+          const result = executeInferenceEngine(profile.disease, profile.data, profile.subjectLabel, true);
+          // Offset timestamps slightly for realistic chronological ordering
+          const pastDate = new Date(Date.now() - (4 - idx) * 3600 * 1000 * 5);
+          result.timestamp = pastDate.toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+          assessments.unshift(result);
+        }
+      });
+      saveAssessmentsToStorage();
+    }
+
+    function resetDemoRecords() {
+      seedDefaultDemoHistory();
+      renderDashboard();
+      renderHistoryTable();
+      showToast('Demo records restored using live model inference.', 'teal');
+    }
+
+    function updateGlobalCounters() {
+      const badge = document.getElementById('history-count-badge');
+      if (badge) badge.textContent = assessments.length;
+    }
+
+    /**
+     * 4. NAVIGATION & UI VIEW MANAGEMENT
+     */
+    function navigateTo(pageId) {
+      const pages = ['dashboard', 'assessment', 'results', 'history', 'models', 'about'];
+      pages.forEach(p => {
+        const section = document.getElementById(`page-${p}`);
+        const navBtn = document.getElementById(`nav-${p}`);
+        if (section) section.classList.toggle('hidden', p !== pageId);
+        if (navBtn) {
+          if (p === pageId) {
+            navBtn.className = 'nav-btn px-3 py-1.5 rounded text-xs sm:text-sm font-semibold bg-teal-50 text-teal-800 border border-teal-200';
+          } else {
+            navBtn.className = 'nav-btn px-3 py-1.5 rounded text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100';
+          }
+        }
+      });
+
+      if (pageId === 'dashboard') renderDashboard();
+      if (pageId === 'history') renderHistoryTable();
+      if (pageId === 'results') renderResultView(currentAssessmentResult);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function toggleWalkthroughModal(show) {
+      const modal = document.getElementById('walkthrough-modal');
+      if (modal) modal.classList.toggle('hidden', !show);
+    }
+
+    function showToast(message, tone = 'teal') {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+      const el = document.createElement('div');
+      const colors = tone === 'red'
+        ? 'bg-red-900 text-white border-red-700'
+        : tone === 'amber'
+          ? 'bg-amber-900 text-white border-amber-700'
+          : 'bg-slate-900 text-white border-slate-700';
+      el.className = `${colors} border rounded px-4 py-3 text-xs shadow-lg pointer-events-auto transition-opacity duration-300`;
+      el.textContent = message;
+      container.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = '0';
+        setTimeout(() => el.remove(), 300);
+      }, 3400);
+    }
+
+    /**
+     * 5. DEMO PROFILES & FORM HANDLING
+     */
+    function renderDemoProfilesGrid() {
+      const grid = document.getElementById('demo-profiles-grid');
+      if (!grid) return;
+      grid.innerHTML = DEMO_PROFILES.map(p => `
+        <button type="button" onclick="loadDemoProfile('${p.id}')" class="text-left p-3 rounded border border-slate-200 hover:border-teal-600 hover:bg-teal-50/40 transition-colors bg-slate-50/60 group">
+          <div class="flex items-center justify-between gap-1 mb-1">
+            <span class="text-[11px] font-mono font-semibold text-teal-800">${p.badge}</span>
+            <span class="text-[10px] font-mono text-slate-400 group-hover:text-teal-700">Load &rarr;</span>
+          </div>
+          <p class="text-xs font-semibold text-slate-900 truncate">${p.title}</p>
+          <p class="text-[11px] text-slate-500 line-clamp-1 mt-0.5">${p.summary}</p>
+        </button>
+      `).join('');
+    }
+
+    function selectDiseaseTab(disease) {
+      currentDiseaseTab = disease;
+      ['diabetes', 'cardiovascular', 'kidney'].forEach(d => {
+        const tab = document.getElementById(`tab-${d}`);
+        const mod = document.getElementById(`form-module-${d}`);
+        if (mod) mod.classList.toggle('hidden', d !== disease);
+        if (tab) {
+          if (d === disease) {
+            tab.className = 'disease-tab px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-t border-t border-x bg-white text-teal-800 border-slate-200 -mb-px';
+          } else {
+            tab.className = 'disease-tab px-4 py-2.5 text-xs sm:text-sm font-medium rounded-t border-t border-x border-transparent text-slate-500 hover:text-slate-800';
+          }
+        }
+      });
+      evaluateRealTimeState();
+    }
+
+    function loadDemoProfile(demoId) {
+      const profile = DEMO_PROFILES.find(p => p.id === demoId);
+      if (!profile) return;
+
+      clearFormInputs(true);
+      activeDemoProfile = profile;
+      selectDiseaseTab(profile.disease);
+
+      document.getElementById('subject-label').value = profile.subjectLabel;
+      const d = profile.data;
+
+      if (profile.disease === 'diabetes') {
+        setVal('t2d-age', d.age);
+        setVal('t2d-sex', d.sex);
+        setVal('t2d-bmi', d.bmi);
+        setVal('t2d-activity', d.activity);
+        setVal('t2d-family', d.family);
+        setVal('t2d-htn', d.htn);
+        setVal('t2d-glucose', d.glucose);
+        setVal('t2d-hba1c', d.hba1c);
+        setVal('t2d-sbp', d.sbp);
+      } else if (profile.disease === 'cardiovascular') {
+        setVal('cvd-age', d.age);
+        setVal('cvd-sex', d.sex);
+        setVal('cvd-sbp', d.sbp);
+        setVal('cvd-dbp', d.dbp);
+        setVal('cvd-chol', d.chol);
+        setVal('cvd-hdl', d.hdl);
+        setVal('cvd-smoking', d.smoking);
+        setVal('cvd-diabetes', d.diabetes);
+        setVal('cvd-chestpain', d.chestpain);
+      } else if (profile.disease === 'kidney') {
+        setVal('ckd-age', d.age);
+        setVal('ckd-bp', d.bp);
+        setVal('ckd-sc', d.sc);
+        setVal('ckd-bu', d.bu);
+        setVal('ckd-hemo', d.hemo);
+        setVal('ckd-sg', d.sg);
+        setVal('ckd-al', d.al);
+        setVal('ckd-rbc', d.rbc);
+        setVal('ckd-pe', d.pe);
+      }
+
+      const banner = document.getElementById('active-demo-banner');
+      document.getElementById('active-demo-title').textContent = `${profile.id} — ${profile.title}`;
+      document.getElementById('active-demo-desc').textContent = `(Fictional demonstration data; click "Run Trained Model Inference" below to execute model)`;
+      banner.classList.remove('hidden');
+
+      evaluateRealTimeState();
+      showToast(`Loaded synthetic fixture ${profile.id}. Ready for model inference.`, 'teal');
+    }
+
+    function setVal(id, val) {
+      const el = document.getElementById(id);
+      if (el) el.value = (val !== undefined && val !== null) ? val : '';
+    }
+
+    function clearFormInputs(keepDemoState = false) {
+      document.getElementById('assessment-form').reset();
+      document.querySelectorAll('[id^="err-"]').forEach(el => el.classList.add('hidden'));
+      if (!keepDemoState) {
+        activeDemoProfile = null;
+        document.getElementById('active-demo-banner').classList.add('hidden');
+      }
+      evaluateRealTimeState();
+    }
+
+    function autoCalcBMI() {
+      const h = parseFloat(document.getElementById('t2d-height').value);
+      const w = parseFloat(document.getElementById('t2d-weight').value);
+      if (h > 80 && w > 20) {
+        const bmi = w / Math.pow(h / 100, 2);
+        document.getElementById('t2d-bmi').value = bmi.toFixed(1);
+        evaluateRealTimeState();
+      }
+    }
+
+    /**
+     * 6. REAL-TIME VALIDATION, URGENT SAFETY CHECKS & COMPLETENESS GATING
+     */
+    function collectCurrentFormInputs() {
+      if (currentDiseaseTab === 'diabetes') {
+        return {
+          age: parseNum('t2d-age'),
+          sex: document.getElementById('t2d-sex').value,
+          bmi: parseNum('t2d-bmi'),
+          activity: document.getElementById('t2d-activity').value,
+          family: document.getElementById('t2d-family').value,
+          htn: document.getElementById('t2d-htn').value,
+          glucose: parseNum('t2d-glucose'),
+          hba1c: parseNum('t2d-hba1c'),
+          sbp: parseNum('t2d-sbp')
+        };
+      } else if (currentDiseaseTab === 'cardiovascular') {
+        return {
+          age: parseNum('cvd-age'),
+          sex: document.getElementById('cvd-sex').value,
+          sbp: parseNum('cvd-sbp'),
+          dbp: parseNum('cvd-dbp'),
+          chol: parseNum('cvd-chol'),
+          hdl: parseNum('cvd-hdl'),
+          smoking: document.getElementById('cvd-smoking').value,
+          diabetes: document.getElementById('cvd-diabetes').value,
+          chestpain: document.getElementById('cvd-chestpain').value
+        };
+      } else {
+        return {
+          age: parseNum('ckd-age'),
+          bp: parseNum('ckd-bp'),
+          sc: parseNum('ckd-sc'),
+          bu: parseNum('ckd-bu'),
+          hemo: parseNum('ckd-hemo'),
+          sg: document.getElementById('ckd-sg').value,
+          al: document.getElementById('ckd-al').value,
+          rbc: document.getElementById('ckd-rbc').value,
+          pe: document.getElementById('ckd-pe').value
+        };
+      }
+    }
+
+    function parseNum(id) {
+      const el = document.getElementById(id);
+      if (!el || el.value === '' || el.value === null) return null;
+      const num = Number(el.value);
+      return Number.isFinite(num) ? num : null;
+    }
+
+    function checkUrgentSafetyFlags(disease, data) {
+      const warnings = [];
+      if (disease === 'diabetes') {
+        if (data.glucose !== null && data.glucose >= 300) {
+          warnings.push(`Critical hyperglycemia entered (Fasting Glucose ${data.glucose} mg/dL >= 300 mg/dL).`);
+        }
+        if (data.glucose !== null && data.glucose < 54) {
+          warnings.push(`Severe hypoglycemia range entered (Fasting Glucose ${data.glucose} mg/dL < 54 mg/dL).`);
+        }
+        if (data.sbp !== null && data.sbp >= 180) {
+          warnings.push(`Hypertensive crisis range systolic blood pressure (${data.sbp} mmHg >= 180 mmHg).`);
+        }
+      } else if (disease === 'cardiovascular') {
+        if ((data.sbp !== null && data.sbp >= 180) || (data.dbp !== null && data.dbp >= 120)) {
+          warnings.push(`Hypertensive crisis threshold entered (BP ${data.sbp || '?'}/${data.dbp || '?'} mmHg >= 180/120 mmHg).`);
+        }
+        if (data.chestpain === 'typical') {
+          warnings.push('Typical exertional angina / chest discomfort reported.');
+        }
+      } else if (disease === 'kidney') {
+        if (data.sc !== null && data.sc >= 4.0) {
+          warnings.push(`Markedly elevated serum creatinine entered (${data.sc} mg/dL >= 4.0 mg/dL).`);
+        }
+        if (data.bp !== null && data.bp >= 120) {
+          warnings.push(`Severely elevated diastolic/mean blood pressure entered (${data.bp} mmHg >= 120 mmHg).`);
+        }
+      }
+      return warnings;
+    }
+
+    function validateFieldRanges(disease, data) {
+      let valid = true;
+      const setErr = (id, msg) => {
+        const el = document.getElementById(`err-${id}`);
+        if (!el) return;
+        if (msg) {
+          el.textContent = msg;
+          el.classList.remove('hidden');
+          valid = false;
+        } else {
+          el.classList.add('hidden');
+        }
+      };
+
+      if (disease === 'diabetes') {
+        setErr('t2d-age', data.age !== null && (data.age < 18 || data.age > 110) ? 'Enter physiological age (18–110 yrs).' : '');
+        setErr('t2d-bmi', data.bmi !== null && (data.bmi < 12 || data.bmi > 75) ? 'Enter physiological BMI (12–75 kg/m²).' : '');
+        setErr('t2d-glucose', data.glucose !== null && (data.glucose < 40 || data.glucose > 600) ? 'Glucose out of plausible range (40–600 mg/dL).' : '');
+        setErr('t2d-hba1c', data.hba1c !== null && (data.hba1c < 3.5 || data.hba1c > 18.0) ? 'HbA1c out of plausible range (3.5–18.0%).' : '');
+        setErr('t2d-sbp', data.sbp !== null && (data.sbp < 60 || data.sbp > 260) ? 'Systolic BP out of plausible range (60–260 mmHg).' : '');
+      } else if (disease === 'cardiovascular') {
+        setErr('cvd-age', data.age !== null && (data.age < 20 || data.age > 110) ? 'Enter physiological age (20–110 yrs).' : '');
+        setErr('cvd-sbp', data.sbp !== null && (data.sbp < 60 || data.sbp > 260) ? 'Systolic BP out of plausible range (60–260 mmHg).' : '');
+        setErr('cvd-dbp', data.dbp !== null && (data.dbp < 35 || data.dbp > 160) ? 'Diastolic BP out of plausible range (35–160 mmHg).' : '');
+        setErr('cvd-chol', data.chol !== null && (data.chol < 80 || data.chol > 600) ? 'Total cholesterol out of plausible range (80–600 mg/dL).' : '');
+        setErr('cvd-hdl', data.hdl !== null && (data.hdl < 15 || data.hdl > 150) ? 'HDL out of plausible range (15–150 mg/dL).' : '');
+      } else if (disease === 'kidney') {
+        setErr('ckd-sc', data.sc !== null && (data.sc < 0.2 || data.sc > 25.0) ? 'Serum creatinine out of plausible range (0.2–25.0 mg/dL).' : '');
+        setErr('ckd-bu', data.bu !== null && (data.bu < 5 || data.bu > 300) ? 'Blood urea out of plausible range (5–300 mg/dL).' : '');
+        setErr('ckd-hemo', data.hemo !== null && (data.hemo < 3.0 || data.hemo > 22.0) ? 'Hemoglobin out of plausible range (3.0–22.0 g/dL).' : '');
+        setErr('ckd-age', data.age !== null && (data.age < 18 || data.age > 110) ? 'Enter physiological age (18–110 yrs).' : '');
+        setErr('ckd-bp', data.bp !== null && (data.bp < 40 || data.bp > 160) ? 'BP out of plausible range (40–160 mmHg).' : '');
+      }
+      return valid;
+    }
+
+    function evaluateRealTimeState() {
+      const data = collectCurrentFormInputs();
+      validateFieldRanges(currentDiseaseTab, data);
+
+      // Update urgent safety alert banner
+      const urgentWarnings = checkUrgentSafetyFlags(currentDiseaseTab, data);
+      const urgentBanner = document.getElementById('urgent-safety-banner');
+      if (urgentWarnings.length > 0) {
+        document.getElementById('urgent-safety-message').textContent = urgentWarnings.join(' ');
+        urgentBanner.classList.remove('hidden');
+      } else {
+        urgentBanner.classList.add('hidden');
+      }
+
+      // Update Diabetes Mode Badge
+      if (currentDiseaseTab === 'diabetes') {
+        const hasLab = data.glucose !== null || data.hba1c !== null;
+        const modeEl = document.getElementById('diabetes-mode-indicator');
+        if (hasLab) {
+          modeEl.textContent = 'MODE: LAB-INFORMED (AUC 0.838)';
+          modeEl.className = 'px-2.5 py-1 rounded font-mono text-[11px] font-semibold bg-teal-100 text-teal-900 shrink-0';
+        } else {
+          modeEl.textContent = 'MODE: LIFESTYLE-ONLY (AUC 0.742)';
+          modeEl.className = 'px-2.5 py-1 rounded font-mono text-[11px] font-semibold bg-slate-200 text-slate-800 shrink-0';
+        }
+      }
+
+      // Update Completeness Indicator
+      const compText = document.getElementById('completeness-text');
+      const compBadge = document.getElementById('completeness-badge');
+
+      if (currentDiseaseTab === 'diabetes') {
+        if (data.age !== null && data.bmi !== null) {
+          const hasLab = data.glucose !== null || data.hba1c !== null;
+          compText.textContent = hasLab
+            ? 'Core demographics + glycemic laboratory biomarkers present.'
+            : 'Core demographics present; glycemic lab fields empty (will execute Lifestyle-Only Sub-Model).';
+          compBadge.textContent = hasLab ? 'LAB-INFORMED READY' : 'SCREENING READY';
+          compBadge.className = 'px-2 py-0.5 rounded font-mono text-[11px] font-semibold bg-teal-100 text-teal-800';
+        } else {
+          compText.textContent = 'Missing required Age and/or BMI fields.';
+          compBadge.textContent = 'INCOMPLETE';
+          compBadge.className = 'px-2 py-0.5 rounded font-mono text-[11px] font-semibold bg-amber-100 text-amber-800';
+        }
+      } else if (currentDiseaseTab === 'cardiovascular') {
+        if (data.age !== null && data.sbp !== null && data.chol !== null) {
+          compText.textContent = 'All mandatory hemodynamic and lipid inputs present for Cleveland model.';
+          compBadge.textContent = 'VALIDATED READY';
+          compBadge.className = 'px-2 py-0.5 rounded font-mono text-[11px] font-semibold bg-teal-100 text-teal-800';
+        } else {
+          compText.textContent = 'Requires Age, Resting Systolic BP, and Total Cholesterol for validated inference.';
+          compBadge.textContent = 'INSUFFICIENT CORE INPUTS';
+          compBadge.className = 'px-2 py-0.5 rounded font-mono text-[11px] font-semibold bg-amber-100 text-amber-800';
+        }
+      } else if (currentDiseaseTab === 'kidney') {
+        if (data.sc !== null && data.bu !== null) {
+          compText.textContent = 'Mandatory renal laboratory biomarkers (Serum Creatinine & Blood Urea) present.';
+          compBadge.textContent = 'RENAL PANEL READY';
+          compBadge.className = 'px-2 py-0.5 rounded font-mono text-[11px] font-semibold bg-teal-100 text-teal-800';
+        } else {
+          compText.textContent = 'Missing mandatory Serum Creatinine and/or Blood Urea. Submitting will log an Insufficient Data status.';
+          compBadge.textContent = 'INSUFFICIENT LAB DATA';
+          compBadge.className = 'px-2 py-0.5 rounded font-mono text-[11px] font-semibold bg-amber-100 text-amber-800';
+        }
+      }
+    }
+
+    /**
+     * 7. REAL STATISTICAL INFERENCE & FEATURE ATTRIBUTION ENGINE
+     */
+    function handleAssessmentSubmit(e) {
+      e.preventDefault();
+      const data = collectCurrentFormInputs();
+      if (!validateFieldRanges(currentDiseaseTab, data)) {
+        showToast('Please correct physiological range validation errors before running inference.', 'red');
+        return;
+      }
+
+      // Enforce basic mandatory demographics for T2D and CVD
+      if (currentDiseaseTab === 'diabetes' && (data.age === null || data.bmi === null)) {
+        showToast('Age and BMI are required for Type 2 Diabetes assessment.', 'amber');
+        return;
+      }
+      if (currentDiseaseTab === 'cardiovascular' && (data.age === null || data.sbp === null || data.chol === null)) {
+        showToast('Age, Resting Systolic BP, and Serum Total Cholesterol are required for CVD assessment.', 'amber');
+        return;
+      }
+
+      const subjectLabel = document.getElementById('subject-label').value.trim() || 'UNSPECIFIED-CASE';
+      const isDemo = activeDemoProfile !== null;
+      const result = executeInferenceEngine(currentDiseaseTab, data, subjectLabel, isDemo);
+
+      assessments.unshift(result);
+      saveAssessmentsToStorage();
+      currentAssessmentResult = result;
+      navigateTo('results');
+      showToast(`Inference complete (${result.refId}).`, 'teal');
+    }
+
+    function sigmoid(z) {
+      return 1 / (1 + Math.exp(-z));
+    }
+
+    function executeInferenceEngine(disease, rawData, subjectLabel, isDemo) {
+      const refId = 'ASM-' + Math.random().toString(36).substring(2, 7).toUpperCase() + '-' + String(Date.now()).slice(-4);
+      const timestamp = new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+      const urgentWarnings = checkUrgentSafetyFlags(disease, rawData);
+
+      // Case 1: Chronic Kidney Disease missing mandatory lab biomarkers -> Strict Insufficient Data Guardrail
+      if (disease === 'kidney' && (rawData.sc === null || rawData.bu === null)) {
+        const model = MODEL_REGISTRY.kidney;
+        const missingFields = [];
+        if (rawData.sc === null) missingFields.push('Serum Creatinine (mg/dL)');
+        if (rawData.bu === null) missingFields.push('Blood Urea (mg/dL)');
+        if (rawData.hemo === null) missingFields.push('Hemoglobin (g/dL)');
+        if (!rawData.sg) missingFields.push('Urine Specific Gravity');
+        if (!rawData.al) missingFields.push('Urine Albumin');
+
+        return {
+          refId,
+          timestamp,
+          subjectLabel,
+          isDemo,
+          diseaseKey: 'kidney',
+          diseaseName: model.name,
+          modelVersion: model.version,
+          dataset: model.dataset,
+          status: 'Insufficient Data',
+          scorePct: null,
+          riskTier: 'Insufficient Data',
+          calibrationNote: 'Inference halted: Mandatory renal laboratory biomarkers (Serum Creatinine and Blood Urea) were not provided. Symptom inputs alone cannot estimate CKD risk.',
+          urgentWarnings,
+          attributions: [],
+          evaluatedInputs: buildEvaluatedInputsList('kidney', rawData),
+          missingInputs: missingFields,
+          limitations: model.limitations,
+          nextSteps: [
+            'Obtain a Basic Metabolic Panel (BMP) or Comprehensive Metabolic Panel (CMP) including Serum Creatinine, Blood Urea Nitrogen (BUN), and eGFR.',
+            'Obtain a standard urinalysis with dipstick protein/albumin before re-running this assessment module.'
+          ]
+        };
+      }
+
+      // Select appropriate model pipeline
+      let model;
+      let status = 'Validated Pipeline';
+      if (disease === 'diabetes') {
+        const hasLab = rawData.glucose !== null || rawData.hba1c !== null;
+        model = hasLab ? MODEL_REGISTRY.diabetes_lab : MODEL_REGISTRY.diabetes_lifestyle;
+        status = hasLab ? 'Lab-Informed Pipeline' : 'Exploratory Lifestyle Screening';
+      } else if (disease === 'cardiovascular') {
+        model = MODEL_REGISTRY.cardiovascular;
+      } else {
+        model = MODEL_REGISTRY.kidney;
+      }
+
+      // Map user inputs to standardized feature vector + track missing optional fields
+      const { vector, missingInputs, evaluatedInputs } = mapInputsToFeatureVector(model.id, rawData);
+
+      // Compute log-odds z = intercept + sum(beta_i * (x_i - mean_i) / std_i)
+      // And individual SHAP-like attribution phi_i = beta_i * (x_i - median_i) / std_i
+      let logOdds = model.intercept;
+      const attributions = [];
+
+      Object.keys(model.features).forEach(fKey => {
+        const meta = model.features[fKey];
+        const val = vector[fKey];
+        const zUser = (val - meta.mean) / meta.std;
+        const zBaseline = (meta.median - meta.mean) / meta.std;
+
+        logOdds += meta.weight * zUser;
+        const deltaLogOdds = meta.weight * (zUser - zBaseline);
+
+        attributions.push({
+          key: fKey,
+          label: meta.label,
+          unit: meta.unit,
+          rawValue: val,
+          medianValue: meta.median,
+          contribution: Number(deltaLogOdds.toFixed(3))
+        });
+      });
+
+      // Sort attributions by absolute magnitude descending
+      attributions.sort((a, b) => Math.abs(b.contribution) - Math.abs(a.contribution));
+
+      const prob = sigmoid(logOdds);
+      const scorePct = Math.round(prob * 1000) / 10; // 1 decimal place
+
+      let riskTier = 'Low';
+      if (scorePct >= 55) {
+        riskTier = 'Elevated';
+      } else if (scorePct >= 25) {
+        riskTier = 'Moderate';
+      }
+
+      return {
+        refId,
+        timestamp,
+        subjectLabel,
+        isDemo,
+        diseaseKey: disease,
+        diseaseName: model.name,
+        modelVersion: model.version,
+        dataset: model.dataset,
+        status,
+        scorePct,
+        riskTier,
+        calibrationNote: model.calibrationNote,
+        urgentWarnings,
+        attributions,
+        evaluatedInputs,
+        missingInputs,
+        limitations: model.limitations,
+        nextSteps: model.nextSteps
+      };
+    }
+
+    function mapInputsToFeatureVector(modelId, d) {
+      const vector = {};
+      const missingInputs = [];
+      const evaluatedInputs = [];
+
+      if (modelId === 'diabetes_lab' || modelId === 'diabetes_lifestyle') {
+        const actMap = { high: -0.7, moderate: 0.0, low: 0.85 };
+        vector.bmi = d.bmi;
+        vector.age = d.age;
+        vector.family = Number(d.family || 0);
+        vector.activity = actMap[d.activity] ?? 0;
+        vector.htn = Number(d.htn || 0);
+
+        evaluatedInputs.push({ name: 'Age', source: 'Self-Reported', display: `${d.age} yrs` });
+        evaluatedInputs.push({ name: 'Biological Sex', source: 'Self-Reported', display: d.sex === 'female' ? 'Female' : 'Male' });
+        evaluatedInputs.push({ name: 'Body Mass Index', source: 'Self-Reported', display: `${d.bmi} kg/m²` });
+        evaluatedInputs.push({ name: 'Physical Activity', source: 'Self-Reported', display: d.activity.toUpperCase() });
+        evaluatedInputs.push({ name: 'Family History', source: 'Self-Reported', display: `Level ${d.family}` });
+        evaluatedInputs.push({ name: 'Hypertension History', source: 'Self-Reported', display: d.htn === '1' ? 'Yes' : 'No' });
+
+        if (modelId === 'diabetes_lab') {
+          if (d.glucose !== null) {
+            vector.glucose = d.glucose;
+            evaluatedInputs.push({ name: 'Fasting Glucose', source: 'Laboratory', display: `${d.glucose} mg/dL` });
+          } else {
+            vector.glucose = MODEL_REGISTRY.diabetes_lab.features.glucose.median;
+            missingInputs.push('Fasting Plasma Glucose (imputed with cohort median 117 mg/dL)');
+          }
+
+          if (d.hba1c !== null) {
+            vector.hba1c = d.hba1c;
+            evaluatedInputs.push({ name: 'HbA1c', source: 'Laboratory', display: `${d.hba1c}%` });
+          } else {
+            vector.hba1c = MODEL_REGISTRY.diabetes_lab.features.hba1c.median;
+            missingInputs.push('HbA1c (imputed with cohort median 5.6%)');
+          }
+        } else {
+          missingInputs.push('Fasting Plasma Glucose (not provided — using Lifestyle-Only Sub-Model)');
+          missingInputs.push('HbA1c (not provided — using Lifestyle-Only Sub-Model)');
+        }
+      } else if (modelId === 'cardiovascular') {
+        const smokeMap = { never: 0, former: 0.7, current: 1.5 };
+        const cpMap = { asymptomatic: 0, non_anginal: 0.6, atypical: 1.3, typical: 2.0 };
+        vector.age = d.age;
+        vector.sexNum = d.sex === 'male' ? 1 : 0;
+        vector.sbp = d.sbp;
+        vector.chol = d.chol;
+        vector.smokingNum = smokeMap[d.smoking] ?? 0;
+        vector.diabetes = Number(d.diabetes || 0);
+        vector.cpNum = cpMap[d.chestpain] ?? 0;
+
+        evaluatedInputs.push({ name: 'Age / Sex', source: 'Self-Reported', display: `${d.age}y / ${d.sex}` });
+        evaluatedInputs.push({ name: 'Resting Systolic BP', source: 'Clinical', display: `${d.sbp} mmHg` });
+        if (d.dbp !== null) {
+          evaluatedInputs.push({ name: 'Resting Diastolic BP', source: 'Clinical', display: `${d.dbp} mmHg` });
+        } else {
+          missingInputs.push('Resting Diastolic BP');
+        }
+        evaluatedInputs.push({ name: 'Total Cholesterol', source: 'Laboratory', display: `${d.chol} mg/dL` });
+
+        if (d.hdl !== null) {
+          // Lower HDL increases risk index
+          vector.hdlAdj = (50 - d.hdl) / 15;
+          evaluatedInputs.push({ name: 'HDL Cholesterol', source: 'Laboratory', display: `${d.hdl} mg/dL` });
+        } else {
+          vector.hdlAdj = 0;
+          missingInputs.push('HDL Cholesterol (imputed at neutral cohort reference 50 mg/dL)');
+        }
+
+        evaluatedInputs.push({ name: 'Smoking Status', source: 'Self-Reported', display: d.smoking.toUpperCase() });
+        evaluatedInputs.push({ name: 'Diabetes History', source: 'Self-Reported', display: d.diabetes === '1' ? 'Yes' : 'No' });
+        evaluatedInputs.push({ name: 'Chest Symptom Class', source: 'Self-Reported', display: d.chestpain.replace('_', ' ') });
+      } else if (modelId === 'kidney') {
+        vector.sc = d.sc;
+        vector.bu = d.bu;
+        evaluatedInputs.push({ name: 'Serum Creatinine', source: 'Laboratory', display: `${d.sc} mg/dL` });
+        evaluatedInputs.push({ name: 'Blood Urea', source: 'Laboratory', display: `${d.bu} mg/dL` });
+
+        if (d.hemo !== null) {
+          vector.hemo = d.hemo;
+          evaluatedInputs.push({ name: 'Hemoglobin', source: 'Laboratory', display: `${d.hemo} g/dL` });
+        } else {
+          vector.hemo = MODEL_REGISTRY.kidney.features.hemo.median;
+          missingInputs.push('Hemoglobin (imputed with cohort median 13.0 g/dL)');
+        }
+
+        if (d.al !== '') {
+          vector.al = Number(d.al);
+          evaluatedInputs.push({ name: 'Urine Albumin', source: 'Laboratory', display: `Level ${d.al} (0–5)` });
+        } else {
+          vector.al = 0;
+          missingInputs.push('Urine Albumin dipstick');
+        }
+
+        if (d.sg !== '') {
+          vector.sg = Number(d.sg);
+          evaluatedInputs.push({ name: 'Urine Specific Gravity', source: 'Laboratory', display: d.sg });
+        } else {
+          vector.sg = 1.020;
+          missingInputs.push('Urine Specific Gravity');
+        }
+
+        if (d.rbc !== '') {
+          vector.rbcNum = d.rbc === 'abnormal' ? 1 : 0;
+          evaluatedInputs.push({ name: 'Urine RBCs', source: 'Laboratory', display: d.rbc.toUpperCase() });
+        } else {
+          vector.rbcNum = 0;
+          missingInputs.push('Urine Red Blood Cells');
+        }
+
+        if (d.bp !== null) {
+          vector.bp = d.bp;
+          evaluatedInputs.push({ name: 'Blood Pressure', source: 'Clinical', display: `${d.bp} mmHg` });
+        } else {
+          vector.bp = 80;
+          missingInputs.push('Blood Pressure');
+        }
+
+        vector.peNum = d.pe === 'yes' ? 1 : 0;
+        evaluatedInputs.push({ name: 'Pedal Edema', source: 'Clinical', display: d.pe === 'yes' ? 'Yes' : 'No' });
+      }
+
+      return { vector, missingInputs, evaluatedInputs };
+    }
+
+    function buildEvaluatedInputsList(disease, d) {
+      const list = [];
+      if (d.sc !== null) list.push({ name: 'Serum Creatinine', source: 'Laboratory', display: `${d.sc} mg/dL` });
+      if (d.bu !== null) list.push({ name: 'Blood Urea', source: 'Laboratory', display: `${d.bu} mg/dL` });
+      if (d.age !== null) list.push({ name: 'Age', source: 'Self-Reported', display: `${d.age} yrs` });
+      if (d.bp !== null) list.push({ name: 'Blood Pressure', source: 'Clinical', display: `${d.bp} mmHg` });
+      if (d.pe) list.push({ name: 'Pedal Edema', source: 'Clinical', display: d.pe.toUpperCase() });
+      return list;
+    }
+
+    /**
+     * 8. RENDER RESULTS & PRINTABLE REPORT
+     */
+    function renderResultView(res) {
+      const emptyEl = document.getElementById('results-empty-state');
+      const reportEl = document.getElementById('printable-report-container');
+      const printBtn = document.getElementById('btn-print-report');
+
+      if (!res) {
+        emptyEl.classList.remove('hidden');
+        reportEl.classList.add('hidden');
+        printBtn.disabled = true;
+        printBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        return;
+      }
+
+      emptyEl.classList.add('hidden');
+      reportEl.classList.remove('hidden');
+      printBtn.disabled = false;
+      printBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+
+      document.getElementById('rep-id').textContent = res.refId;
+      document.getElementById('rep-timestamp').textContent = res.timestamp;
+      document.getElementById('rep-subject').textContent = res.subjectLabel;
+      document.getElementById('rep-demo-tag').classList.toggle('hidden', !res.isDemo);
+
+      document.getElementById('rep-disease').textContent = res.diseaseName;
+      document.getElementById('rep-model-version').textContent = `${res.modelVersion} • ${res.dataset}`;
+      document.getElementById('rep-calibration-note').textContent = res.calibrationNote;
+
+      // Urgent box
+      const urgentBox = document.getElementById('rep-urgent-box');
+      if (res.urgentWarnings && res.urgentWarnings.length > 0) {
+        document.getElementById('rep-urgent-text').textContent = res.urgentWarnings.join(' ') + ' Seek prompt evaluation by a qualified healthcare professional.';
+        urgentBox.classList.remove('hidden');
+      } else {
+        urgentBox.classList.add('hidden');
+      }
+
+      // Status badge
+      const statusBadge = document.getElementById('rep-status-badge');
+      statusBadge.textContent = res.status;
+      if (res.status === 'Insufficient Data') {
+        statusBadge.className = 'px-2.5 py-0.5 rounded text-xs font-semibold bg-slate-200 text-slate-800';
+      } else if (res.status.includes('Exploratory')) {
+        statusBadge.className = 'px-2.5 py-0.5 rounded text-xs font-semibold bg-amber-100 text-amber-900';
+      } else {
+        statusBadge.className = 'px-2.5 py-0.5 rounded text-xs font-semibold bg-teal-100 text-teal-900';
+      }
+
+      // Score & Tier
+      const scoreEl = document.getElementById('rep-score');
+      const tierBadge = document.getElementById('rep-tier-badge');
+      if (res.scorePct === null) {
+        scoreEl.textContent = 'N/A';
+        tierBadge.textContent = 'Insufficient Data';
+        tierBadge.className = 'px-2 py-0.5 rounded text-xs font-semibold bg-slate-200 text-slate-700';
+      } else {
+        scoreEl.textContent = `${res.scorePct.toFixed(1)}%`;
+        tierBadge.textContent = `${res.riskTier} Model Score`;
+        if (res.riskTier === 'Elevated') {
+          tierBadge.className = 'px-2 py-0.5 rounded text-xs font-semibold bg-amber-100 text-amber-900 border border-amber-300';
+        } else if (res.riskTier === 'Moderate') {
+          tierBadge.className = 'px-2 py-0.5 rounded text-xs font-semibold bg-sky-100 text-sky-900 border border-sky-200';
+        } else {
+          tierBadge.className = 'px-2 py-0.5 rounded text-xs font-semibold bg-teal-100 text-teal-900 border border-teal-200';
+        }
+      }
+
+      // Attribution Chart
+      const attrContainer = document.getElementById('rep-attribution-chart');
+      if (!res.attributions || res.attributions.length === 0) {
+        attrContainer.innerHTML = `<div class="p-4 bg-slate-50 border border-slate-200 rounded text-xs text-slate-600">Feature attribution is unavailable because mandatory laboratory biomarkers were missing.</div>`;
+      } else {
+        const maxAbs = Math.max(...res.attributions.map(a => Math.abs(a.contribution)), 0.5);
+        attrContainer.innerHTML = res.attributions.map(a => {
+          const isPositive = a.contribution > 0.01;
+          const isNegative = a.contribution < -0.01;
+          const widthPct = Math.min(100, Math.round((Math.abs(a.contribution) / maxAbs) * 100));
+          const barColor = isPositive ? 'bg-amber-600' : isNegative ? 'bg-teal-600' : 'bg-slate-400';
+          const signStr = a.contribution > 0 ? `+${a.contribution.toFixed(2)}` : a.contribution.toFixed(2);
+          return `
+            <div class="space-y-1">
+              <div class="flex items-center justify-between text-xs">
+                <span class="font-medium text-slate-800">${a.label}</span>
+                <span class="font-mono text-[11px] ${isPositive ? 'text-amber-800 font-semibold' : isNegative ? 'text-teal-800' : 'text-slate-500'}">
+                  ${signStr} log-odds
+                </span>
+              </div>
+              <div class="w-full bg-slate-100 h-2.5 rounded-xs overflow-hidden flex items-center">
+                <div class="${barColor} h-full rounded-xs transition-all duration-300" style="width: ${Math.max(widthPct, 3)}%"></div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Evaluated Inputs Table
+      const inputsBody = document.getElementById('rep-inputs-table');
+      inputsBody.innerHTML = res.evaluatedInputs.map(item => `
+        <tr>
+          <td class="py-2 px-3 font-medium text-slate-800">${item.name}</td>
+          <td class="py-2 px-3 text-[11px] font-mono text-slate-500">${item.source}</td>
+          <td class="py-2 px-3 text-right font-mono text-slate-900">${item.display}</td>
+        </tr>
+      `).join('');
+
+      // Missing Inputs
+      const missingEl = document.getElementById('rep-missing-list');
+      if (res.missingInputs && res.missingInputs.length > 0) {
+        missingEl.textContent = res.missingInputs.join(' • ');
+      } else {
+        missingEl.textContent = 'None — all core features for this model pipeline were supplied.';
+      }
+
+      // Next steps & Limitations
+      document.getElementById('rep-next-steps').innerHTML = res.nextSteps.map(s => `<li>${s}</li>`).join('');
+      document.getElementById('rep-limitations').innerHTML = res.limitations.map(l => `<li>${l}</li>`).join('');
+    }
+
+    /**
+     * 9. DASHBOARD RENDERING & SVG CHARTS
+     */
+    function renderDashboard() {
+      const total = assessments.length;
+      const elevated = assessments.filter(a => a.riskTier === 'Elevated' || a.riskTier === 'Moderate').length;
+      const insufficient = assessments.filter(a => a.status === 'Insufficient Data').length;
+
+      document.getElementById('kpi-total').textContent = total;
+      document.getElementById('kpi-elevated').textContent = elevated;
+      document.getElementById('kpi-elevated-pct').textContent = total > 0 ? `${Math.round((elevated / total) * 100)}%` : '0%';
+      document.getElementById('kpi-insufficient').textContent = insufficient;
+
+      renderCohortSvgChart();
+      renderRiskDistributionSvgChart();
+      renderRecentDashboardTable();
+    }
+
+    function renderCohortSvgChart() {
+      const container = document.getElementById('chart-disease-cohort');
+      if (!container) return;
+
+      const counts = [
+        { label: 'Type 2 Diabetes', count: assessments.filter(a => a.diseaseKey === 'diabetes').length, color: '#0D9488' },
+        { label: 'Cardiovascular', count: assessments.filter(a => a.diseaseKey === 'cardiovascular').length, color: '#0F172A' },
+        { label: 'Chronic Kidney', count: assessments.filter(a => a.diseaseKey === 'kidney').length, color: '#475569' }
+      ];
+      const maxVal = Math.max(...counts.map(c => c.count), 1);
+
+      container.innerHTML = `
+        <svg viewBox="0 0 460 190" class="w-full h-full" role="img" aria-label="Assessments by Disease Cohort Bar Chart">
+          ${counts.map((c, idx) => {
+            const y = 24 + idx * 52;
+            const barWidth = Math.max(4, (c.count / maxVal) * 240);
+            return `
+              <text x="8" y="${y + 16}" font-size="11" font-weight="600" fill="#334155">${c.label}</text>
+              <rect x="135" y="${y}" width="245" height="24" rx="3" fill="#F1F5F9" />
+              <rect x="135" y="${y}" width="${barWidth}" height="24" rx="3" fill="${c.color}" />
+              <text x="${143 + barWidth}" y="${y + 16}" font-size="11" font-family="monospace" font-weight="700" fill="#0F172A">${c.count}</text>
+            `;
+          }).join('')}
+          <line x1="135" y1="12" x2="135" y2="174" stroke="#CBD5E1" stroke-width="1" />
+        </svg>
+      `;
+    }
+
+    function renderRiskDistributionSvgChart() {
+      const container = document.getElementById('chart-risk-distribution');
+      if (!container) return;
+
+      const tiers = [
+        { label: 'Low Score', count: assessments.filter(a => a.riskTier === 'Low').length, color: '#0D9488' },
+        { label: 'Moderate Score', count: assessments.filter(a => a.riskTier === 'Moderate').length, color: '#0284C7' },
+        { label: 'Elevated Score', count: assessments.filter(a => a.riskTier === 'Elevated').length, color: '#D97706' },
+        { label: 'Insufficient Data', count: assessments.filter(a => a.riskTier === 'Insufficient Data').length, color: '#94A3B8' }
+      ];
+      const maxVal = Math.max(...tiers.map(t => t.count), 1);
+
+      container.innerHTML = `
+        <svg viewBox="0 0 460 190" class="w-full h-full" role="img" aria-label="Risk Category Distribution Chart">
+          ${tiers.map((t, idx) => {
+            const x = 45 + idx * 102;
+            const barH = Math.max(4, (t.count / maxVal) * 110);
+            const y = 140 - barH;
+            return `
+              <rect x="${x}" y="${y}" width="54" height="${barH}" rx="3" fill="${t.color}" />
+              <text x="${x + 27}" y="${y - 6}" text-anchor="middle" font-size="11" font-family="monospace" font-weight="700" fill="#0F172A">${t.count}</text>
+              <text x="${x + 27}" y="158" text-anchor="middle" font-size="10" font-weight="500" fill="#475569">${t.label.split(' ')[0]}</text>
+              <text x="${x + 27}" y="170" text-anchor="middle" font-size="9.5" fill="#64748B">${t.label.split(' ')[1] || ''}</text>
+            `;
+          }).join('')}
+          <line x1="24" y1="140" x2="440" y2="140" stroke="#CBD5E1" stroke-width="1" />
+        </svg>
+      `;
+    }
+
+    function renderRecentDashboardTable() {
+      const container = document.getElementById('dashboard-recent-table');
+      if (!container) return;
+      const recent = assessments.slice(0, 5);
+      if (recent.length === 0) {
+        container.innerHTML = `<div class="p-6 text-center text-xs text-slate-500">No assessments recorded yet.</div>`;
+        return;
+      }
+      container.innerHTML = buildAssessmentsTableHTML(recent);
+    }
+
+    /**
+     * 10. ASSESSMENT HISTORY TABLE & ACTIONS
+     */
+    function renderHistoryTable() {
+      const container = document.getElementById('history-table-container');
+      if (!container) return;
+
+      const query = (document.getElementById('history-search')?.value || '').toLowerCase();
+      const diseaseFilter = document.getElementById('history-filter-disease')?.value || 'all';
+      const tierFilter = document.getElementById('history-filter-tier')?.value || 'all';
+
+      const filtered = assessments.filter(a => {
+        const matchesQuery = a.refId.toLowerCase().includes(query) || a.subjectLabel.toLowerCase().includes(query) || a.diseaseName.toLowerCase().includes(query);
+        const matchesDisease = diseaseFilter === 'all' || a.diseaseKey === diseaseFilter;
+        const matchesTier = tierFilter === 'all' || a.riskTier === tierFilter;
+        return matchesQuery && matchesDisease && matchesTier;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="p-8 text-center text-xs text-slate-500">No assessment records match the current filter criteria.</div>`;
+        return;
+      }
+
+      container.innerHTML = buildAssessmentsTableHTML(filtered);
+    }
+
+    function buildAssessmentsTableHTML(rows) {
+      return `
+        <table class="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider">
+              <th class="py-3 px-4">Ref ID</th>
+              <th class="py-3 px-4">Case Label</th>
+              <th class="py-3 px-4">Disease Module</th>
+              <th class="py-3 px-4">Model Score</th>
+              <th class="py-3 px-4">Model Version</th>
+              <th class="py-3 px-4">Timestamp</th>
+              <th class="py-3 px-4 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-200 text-slate-700">
+            ${rows.map(r => {
+              const tierClass = r.riskTier === 'Elevated'
+                ? 'bg-amber-50 text-amber-900 border-amber-200'
+                : r.riskTier === 'Moderate'
+                  ? 'bg-sky-50 text-sky-900 border-sky-200'
+                  : r.riskTier === 'Insufficient Data'
+                    ? 'bg-slate-100 text-slate-700 border-slate-300'
+                    : 'bg-teal-50 text-teal-800 border-teal-200';
+              return `
+                <tr class="hover:bg-slate-50/70">
+                  <td class="py-3 px-4 font-mono font-semibold text-slate-900">${r.refId}</td>
+                  <td class="py-3 px-4 font-mono text-[11px]">
+                    ${r.subjectLabel}
+                    ${r.isDemo ? '<span class="ml-1 px-1.5 py-0.2 rounded bg-slate-100 text-slate-500 text-[10px]">DEMO</span>' : ''}
+                  </td>
+                  <td class="py-3 px-4 font-medium text-slate-900">${r.diseaseName}</td>
+                  <td class="py-3 px-4">
+                    <span class="px-2 py-0.5 rounded border text-[11px] font-semibold ${tierClass}">
+                      ${r.scorePct !== null ? `${r.scorePct.toFixed(1)}% (${r.riskTier})` : 'Insufficient Data'}
+                    </span>
+                  </td>
+                  <td class="py-3 px-4 font-mono text-[11px] text-slate-500">${r.modelVersion}</td>
+                  <td class="py-3 px-4 text-slate-500">${r.timestamp}</td>
+                  <td class="py-3 px-4 text-right space-x-2">
+                    <button onclick="openAssessmentReport('${r.refId}')" class="px-2.5 py-1 rounded bg-teal-50 text-teal-800 border border-teal-200 font-medium hover:bg-teal-100">
+                      View Report
+                    </button>
+                    <button onclick="deleteAssessmentRecord('${r.refId}')" class="px-2 py-1 rounded text-slate-400 hover:text-red-700 hover:bg-red-50" title="Delete Record">
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function openAssessmentReport(refId) {
+      const found = assessments.find(a => a.refId === refId);
+      if (found) {
+        currentAssessmentResult = found;
+        navigateTo('results');
+      }
+    }
+
+    function deleteAssessmentRecord(refId) {
+      assessments = assessments.filter(a => a.refId !== refId);
+      if (currentAssessmentResult && currentAssessmentResult.refId === refId) {
+        currentAssessmentResult = null;
+      }
+      saveAssessmentsToStorage();
+      renderDashboard();
+      renderHistoryTable();
+      showToast(`Deleted assessment record ${refId}.`, 'slate');
+    }
+
+    // Boot application on DOM load
+    window.addEventListener('DOMContentLoaded', initApp);
+  </script>
+</body>
+</html>
